@@ -380,6 +380,42 @@
 
     footer img { height: 22px; opacity: 0.85; filter: brightness(0) invert(1); }
 
+    /* SEARCH */
+    .tools-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .tools-header .section-label { margin-bottom: 0; }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      width: 240px;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap:focus-within { border-color: var(--teal); }
+
+    .search-wrap input {
+      border: none;
+      outline: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      background: transparent;
+      width: 100%;
+    }
+
+    .search-wrap input::placeholder { color: #aaa; }
+
     /* RESPONSIVE */
     @media (max-width: 900px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
@@ -409,7 +445,14 @@
 
   <!-- TOOLS -->
   <div class="tools-section">
-    <div class="section-label">Available Tools &mdash; 6 Tools</div>
+    <div class="tools-header">
+      <div class="section-label">Available Tools &mdash; <span id="tool-count">6</span> Tools</div>
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search tools..." oninput="filterTools()" />
+      </div>
+    </div>
+    <p id="no-results" style="display:none; font-size:0.85rem; color:var(--text-secondary); margin-bottom:2rem;">No tools match your search.</p>
     <div class="grid">
 
       <!-- Search Term Tool -->
@@ -431,7 +474,7 @@
           <span class="tag">PPC</span>
           <span class="tag">Keepa</span>
         </div>
-        <a class="btn" href="https://growisto-harvest-tool.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+        <a class="btn" href="https://growisto-search-term-harvest-and-negate.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
       </div>
 
       <!-- ASIN Analyser -->
@@ -453,7 +496,7 @@
           <span class="tag">Pivot Table</span>
           <span class="tag">Ad Performance</span>
         </div>
-        <a class="btn" href="https://growisto-asin-analyser-tool.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+        <a class="btn" href="https://growisto-asin-performance-analyser.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
       </div>
 
       <!-- Amazon Listing Generator -->
@@ -618,6 +661,20 @@
   </div>
 
   <script>
+    function filterTools() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.card');
+      let visible = 0;
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        const match = text.includes(query);
+        card.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      document.getElementById('tool-count').textContent = visible;
+      document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+    }
+
     // Footer date
     const d = new Date();
     document.getElementById('footer-date').textContent =
