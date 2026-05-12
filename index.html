@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Growisto Marketplaces AI Suite</title>
+  <link rel="icon" type="image/png" href="assets/growisto-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #1a9090;
+      --teal-dark: #157878;
+      --teal-light: #e8f5f5;
+      --text-primary: #1a1a2e;
+      --text-secondary: #555770;
+      --border: #e2e8f0;
+      --bg: #f7f9fc;
+      --white: #ffffff;
+      --live: #16a34a;
+      --live-bg: #dcfce7;
+      --claude-badge: #7c3aed;
+      --claude-badge-bg: #ede9fe;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav img { height: 28px; }
+
+    .nav-badge {
+      background: var(--teal);
+      color: var(--white);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 64px 2rem 48px;
+    }
+
+    .hero-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .hero p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: var(--teal);
+      border-radius: 2px;
+      margin: 24px auto 0;
+    }
+
+    /* TOOLS SECTION */
+    .tools-section {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 2rem 80px;
+      width: 100%;
+    }
+
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 32px rgba(26,144,144,0.10);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--teal-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.2rem;
+    }
+
+    .card-title-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--live-bg);
+      color: var(--live);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .badge-live::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--live);
+      border-radius: 50%;
+    }
+
+    .badge-claude {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--claude-badge-bg);
+      color: var(--claude-badge);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .badge-claude::before {
+      content: '✦';
+      font-size: 0.55rem;
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .tag {
+      background: var(--bg);
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--teal);
+      color: var(--white);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover { background: var(--teal-dark); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--claude-badge);
+      border: 1.5px solid var(--claude-badge);
+    }
+
+    .btn-outline:hover {
+      background: var(--claude-badge-bg);
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 36px 32px 32px;
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal .modal-sub {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: var(--teal);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      line-height: 1.55;
+    }
+
+    .step-text strong { color: var(--text-primary); }
+
+    .modal-note {
+      background: var(--teal-light);
+      border-left: 3px solid var(--teal);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: var(--teal-dark);
+      line-height: 1.5;
+    }
+
+    /* FOOTER */
+    footer {
+      margin-top: auto;
+      background: var(--text-primary);
+      color: rgba(255,255,255,0.5);
+      padding: 20px 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+    }
+
+    footer img { height: 22px; opacity: 0.85; filter: brightness(0) invert(1); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 580px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero { padding: 48px 1.5rem 36px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <img src="assets/growisto-logo.png" alt="Growisto" />
+    <span class="nav-badge">Marketplaces AI Suite</span>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-label">Growisto Internal Tools</div>
+    <h1>Marketplaces AI Suite</h1>
+    <p>A unified hub of AI-powered tools for Amazon marketplace operations — BSR tracking, review analysis, search term management, ASIN performance, and listing creation.</p>
+    <div class="divider"></div>
+  </div>
+
+  <!-- TOOLS -->
+  <div class="tools-section">
+    <div class="section-label">Available Tools &mdash; 6 Tools</div>
+    <div class="grid">
+
+      <!-- BSR Scrapper -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">📊</div>
+          <div class="card-title-row">
+            <span class="card-title">BSR Scrapper</span>
+            <span class="badge-live">Live</span>
+          </div>
+        </div>
+        <p class="card-desc">Scrape Best Seller Rankings across multiple Amazon geographies in one go. Download the installer to set up a local dashboard — input your ASINs and target geographies to fetch BSR across subcategories simultaneously. Results available on the dashboard and as a downloadable Excel file.</p>
+        <div class="tags">
+          <span class="tag">BSR</span>
+          <span class="tag">Multi-Geography</span>
+          <span class="tag">Bulk Scrape</span>
+          <span class="tag">Excel Export</span>
+        </div>
+        <a class="btn" href="https://growisto-amazon-bsr-scrapper.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+      </div>
+
+      <!-- Amazon Review Scrapper -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⭐</div>
+          <div class="card-title-row">
+            <span class="card-title">Amazon Review Scrapper</span>
+            <span class="badge-live">Live</span>
+          </div>
+        </div>
+        <p class="card-desc">Scrape all customer reviews and ratings visible on Amazon India product pages. Download the installer to set up a local desktop app — enter an ASIN and pull the complete review set in one click, ready for VOC and sentiment analysis.</p>
+        <div class="tags">
+          <span class="tag">Reviews</span>
+          <span class="tag">Ratings</span>
+          <span class="tag">Amazon.in</span>
+          <span class="tag">VOC</span>
+          <span class="tag">Desktop App</span>
+        </div>
+        <a class="btn" href="https://growisto-amazon-in-review-scraper.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+      </div>
+
+      <!-- Search Term Tool -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🔍</div>
+          <div class="card-title-row">
+            <span class="card-title">Search Term Harvest & Negate Tool</span>
+            <span class="badge-live">Live</span>
+          </div>
+        </div>
+        <p class="card-desc">Upload an Amazon Sponsored Ads search term report and instantly pivot all data by search term. Identify top performers to harvest as new keywords, flag underperformers to negate, and look up ASINs via Keepa for product targeting rows — all in one workflow.</p>
+        <div class="tags">
+          <span class="tag">Search Terms</span>
+          <span class="tag">Harvest</span>
+          <span class="tag">Negate</span>
+          <span class="tag">PPC</span>
+          <span class="tag">Keepa</span>
+        </div>
+        <a class="btn" href="https://growisto-harvest-tool.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+      </div>
+
+      <!-- ASIN Analyser -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">📈</div>
+          <div class="card-title-row">
+            <span class="card-title">ASIN Performance Analyser</span>
+            <span class="badge-live">Live</span>
+          </div>
+        </div>
+        <p class="card-desc">Blend SP and SD Advertised Product Reports with Total Sales data at ASIN level. Attach custom group labels — Category, Gender, Type, and more — then explore a fully dynamic table where you drag group columns, toggle metrics, and filter inline to slice performance any way you need.</p>
+        <div class="tags">
+          <span class="tag">ASIN</span>
+          <span class="tag">SP</span>
+          <span class="tag">SD</span>
+          <span class="tag">Pivot Table</span>
+          <span class="tag">Ad Performance</span>
+        </div>
+        <a class="btn" href="https://growisto-asin-analyser-tool.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+      </div>
+
+      <!-- Amazon Listing Generator -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">✍️</div>
+          <div class="card-title-row">
+            <span class="card-title">Amazon Listing Generator</span>
+            <span class="badge-claude">Claude Plugin</span>
+          </div>
+        </div>
+        <p class="card-desc">End-to-end Amazon listing creation across a 9-step workflow — from marketplace and browse node selection to SEO-optimised titles, bullet points, descriptions, and backend search terms. Includes competitor research, dynamic bullet themes, inline keyword bolding, and formatted Excel delivery.</p>
+        <div class="tags">
+          <span class="tag">Listing</span>
+          <span class="tag">SEO</span>
+          <span class="tag">Keywords</span>
+          <span class="tag">Bullets</span>
+          <span class="tag">Excel Export</span>
+        </div>
+        <button class="btn btn-outline" onclick="openModal('listing')">✦ How to Use</button>
+      </div>
+
+      <!-- VOC Review Sentiment -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">💬</div>
+          <div class="card-title-row">
+            <span class="card-title">Amazon Review Sentiment Analysis</span>
+            <span class="badge-claude">Claude Plugin</span>
+          </div>
+        </div>
+        <p class="card-desc">Turn raw Amazon review exports into a decision-ready Excel workbook in minutes. A four-stage pipeline — cleaning, AI tagging, aggregation, and delivery — produces four structured sheets: headline KPIs, ranked problem areas with urgency flags, rating trends, and a feature satisfaction matrix.</p>
+        <div class="tags">
+          <span class="tag">VOC</span>
+          <span class="tag">Sentiment</span>
+          <span class="tag">Reviews</span>
+          <span class="tag">Excel Report</span>
+          <span class="tag">AI Analysis</span>
+        </div>
+        <button class="btn btn-outline" onclick="openModal('voc')">✦ How to Use</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <img src="assets/growisto-logo.png" alt="Growisto" />
+    <span>Internal Use Only</span>
+    <span id="footer-date"></span>
+  </footer>
+
+  <!-- MODAL: Listing Generator -->
+  <div class="modal-overlay" id="modal-listing">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('listing')">&times;</button>
+      <h2>Amazon Listing Generator</h2>
+      <p class="modal-sub">Claude Plugin &mdash; Follow these steps to get started</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Open <strong>Claude</strong> at <strong>claude.ai</strong> and sign in with your Growisto account.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Navigate to <strong>Plugins</strong> from the left sidebar or settings menu.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Search for and install <strong>Growisto Amazon Listing Generator</strong>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Start a new chat and type <strong>/amazon-listing-generator</strong> to launch the 9-step listing workflow.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-text">Follow the prompts — select marketplace, browse node, tone, add product details, and receive your fully formatted listing with an Excel export.</div>
+        </div>
+      </div>
+      <div class="modal-note">This plugin runs entirely inside Claude. No external login or setup required beyond the one-time install.</div>
+    </div>
+  </div>
+
+  <!-- MODAL: VOC Review -->
+  <div class="modal-overlay" id="modal-voc">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('voc')">&times;</button>
+      <h2>Amazon Review Sentiment Analysis</h2>
+      <p class="modal-sub">Claude Plugin &mdash; Follow these steps to get started</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Open <strong>Claude</strong> at <strong>claude.ai</strong> and sign in with your Growisto account.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Navigate to <strong>Plugins</strong> from the left sidebar or settings menu.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Search for and install <strong>Growisto VOC Review</strong>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Start a new chat, upload your Amazon review export file, and type <strong>/voc-review</strong> to begin analysis.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-text">The tool processes your reviews through a four-stage pipeline and delivers a branded <strong>four-sheet Excel workbook</strong> — KPIs, problem areas, rating trends, and feature satisfaction matrix.</div>
+        </div>
+      </div>
+      <div class="modal-note">This plugin runs entirely inside Claude. Your review data stays in your session and is never stored externally.</div>
+    </div>
+  </div>
+
+  <script>
+    // Footer date
+    const d = new Date();
+    document.getElementById('footer-date').textContent =
+      d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    function openModal(id) {
+      document.getElementById('modal-' + id).classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+      document.getElementById('modal-' + id).classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      });
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.open').forEach(m => {
+          m.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

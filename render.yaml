@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: growisto-marketplaces-ai-suite
+    runtime: static
+    staticPublishPath: .
+    buildCommand: ""
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
