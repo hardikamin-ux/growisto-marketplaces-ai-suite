@@ -12,9 +12,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --teal: #1a9090;
-      --teal-dark: #157878;
-      --teal-light: #e8f5f5;
+      --teal: #3d7080;
+      --teal-dark: #2f5c6b;
+      --teal-light: #e8f0f2;
       --text-primary: #1a1a2e;
       --text-secondary: #555770;
       --border: #e2e8f0;
@@ -212,8 +212,8 @@
     }
 
     .badge-claude::before {
-      content: '✦';
-      font-size: 0.55rem;
+      content: '';
+      display: none;
     }
 
     .card-desc {
@@ -403,7 +403,7 @@
   <div class="hero">
     <div class="hero-label">Growisto Internal Tools</div>
     <h1>Marketplaces AI Suite</h1>
-    <p>A unified hub of AI-powered tools for Amazon marketplace operations — BSR tracking, review analysis, search term management, ASIN performance, and listing creation.</p>
+    <p>A unified hub of AI-powered tools for Marketplace operations.</p>
     <div class="divider"></div>
   </div>
 
@@ -412,49 +412,12 @@
     <div class="section-label">Available Tools &mdash; 6 Tools</div>
     <div class="grid">
 
-      <!-- BSR Scrapper -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">📊</div>
-          <div class="card-title-row">
-            <span class="card-title">BSR Scrapper</span>
-            <span class="badge-live">Live</span>
-          </div>
-        </div>
-        <p class="card-desc">Scrape Best Seller Rankings across multiple Amazon geographies in one go. Download the installer to set up a local dashboard — input your ASINs and target geographies to fetch BSR across subcategories simultaneously. Results available on the dashboard and as a downloadable Excel file.</p>
-        <div class="tags">
-          <span class="tag">BSR</span>
-          <span class="tag">Multi-Geography</span>
-          <span class="tag">Bulk Scrape</span>
-          <span class="tag">Excel Export</span>
-        </div>
-        <a class="btn" href="https://growisto-amazon-bsr-scrapper.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
-      </div>
-
-      <!-- Amazon Review Scrapper -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">⭐</div>
-          <div class="card-title-row">
-            <span class="card-title">Amazon Review Scrapper</span>
-            <span class="badge-live">Live</span>
-          </div>
-        </div>
-        <p class="card-desc">Scrape all customer reviews and ratings visible on Amazon India product pages. Download the installer to set up a local desktop app — enter an ASIN and pull the complete review set in one click, ready for VOC and sentiment analysis.</p>
-        <div class="tags">
-          <span class="tag">Reviews</span>
-          <span class="tag">Ratings</span>
-          <span class="tag">Amazon.in</span>
-          <span class="tag">VOC</span>
-          <span class="tag">Desktop App</span>
-        </div>
-        <a class="btn" href="https://growisto-amazon-in-review-scraper.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
-      </div>
-
       <!-- Search Term Tool -->
       <div class="card">
         <div class="card-header">
-          <div class="card-icon">🔍</div>
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d7080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
           <div class="card-title-row">
             <span class="card-title">Search Term Harvest & Negate Tool</span>
             <span class="badge-live">Live</span>
@@ -474,7 +437,9 @@
       <!-- ASIN Analyser -->
       <div class="card">
         <div class="card-header">
-          <div class="card-icon">📈</div>
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d7080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
           <div class="card-title-row">
             <span class="card-title">ASIN Performance Analyser</span>
             <span class="badge-live">Live</span>
@@ -494,7 +459,9 @@
       <!-- Amazon Listing Generator -->
       <div class="card">
         <div class="card-header">
-          <div class="card-icon">✍️</div>
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d7080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
           <div class="card-title-row">
             <span class="card-title">Amazon Listing Generator</span>
             <span class="badge-claude">Claude Plugin</span>
@@ -508,13 +475,58 @@
           <span class="tag">Bullets</span>
           <span class="tag">Excel Export</span>
         </div>
-        <button class="btn btn-outline" onclick="openModal('listing')">✦ How to Use</button>
+        <button class="btn btn-outline" onclick="openModal('listing')">How to Use</button>
+      </div>
+
+      <!-- BSR Scrapper -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d7080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div class="card-title-row">
+            <span class="card-title">BSR Scrapper</span>
+            <span class="badge-live">Live</span>
+          </div>
+        </div>
+        <p class="card-desc">Scrape Best Seller Rankings across multiple Amazon geographies in one go. Download the installer to set up a local dashboard — input your ASINs and target geographies to fetch BSR across subcategories simultaneously. Results available on the dashboard and as a downloadable Excel file.</p>
+        <div class="tags">
+          <span class="tag">BSR</span>
+          <span class="tag">Multi-Geography</span>
+          <span class="tag">Bulk Scrape</span>
+          <span class="tag">Excel Export</span>
+        </div>
+        <a class="btn" href="https://growisto-amazon-bsr-scrapper.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
+      </div>
+
+      <!-- Amazon Review Scrapper -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d7080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="card-title-row">
+            <span class="card-title">Amazon Review Scrapper</span>
+            <span class="badge-live">Live</span>
+          </div>
+        </div>
+        <p class="card-desc">Scrape all customer reviews and ratings visible on Amazon India product pages. Download the installer to set up a local desktop app — enter an ASIN and pull the complete review set in one click, ready for VOC and sentiment analysis.</p>
+        <div class="tags">
+          <span class="tag">Reviews</span>
+          <span class="tag">Ratings</span>
+          <span class="tag">Amazon.in</span>
+          <span class="tag">VOC</span>
+          <span class="tag">Desktop App</span>
+        </div>
+        <a class="btn" href="https://growisto-amazon-in-review-scraper.onrender.com/" target="_blank" rel="noopener">→ Launch Tool</a>
       </div>
 
       <!-- VOC Review Sentiment -->
       <div class="card">
         <div class="card-header">
-          <div class="card-icon">💬</div>
+          <div class="card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3d7080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
           <div class="card-title-row">
             <span class="card-title">Amazon Review Sentiment Analysis</span>
             <span class="badge-claude">Claude Plugin</span>
@@ -528,7 +540,7 @@
           <span class="tag">Excel Report</span>
           <span class="tag">AI Analysis</span>
         </div>
-        <button class="btn btn-outline" onclick="openModal('voc')">✦ How to Use</button>
+        <button class="btn btn-outline" onclick="openModal('voc')">How to Use</button>
       </div>
 
     </div>
