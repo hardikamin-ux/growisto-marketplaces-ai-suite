@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Review Sentiment Analysis — Growisto Marketplaces AI Suite</title>
+  <link rel="icon" type="image/png" href="../assets/growisto-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #3d7080;
+      --teal-dark: #2f5c6b;
+      --teal-light: #e8f0f2;
+      --text-primary: #1a1a2e;
+      --text-secondary: #555770;
+      --border: #e2e8f0;
+      --bg: #f7f9fc;
+      --white: #ffffff;
+      --claude-badge: #7c3aed;
+      --claude-badge-bg: #ede9fe;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav img { height: 28px; }
+
+    .nav-badge {
+      background: var(--teal);
+      color: var(--white);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 2rem 80px;
+      width: 100%;
+      flex: 1;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--teal);
+      text-decoration: none;
+      margin-bottom: 32px;
+    }
+
+    .back-link:hover { color: var(--teal-dark); }
+
+    .tool-header { margin-bottom: 36px; }
+
+    .badge-claude {
+      display: inline-flex;
+      align-items: center;
+      background: var(--claude-badge-bg);
+      color: var(--claude-badge);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .tool-header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .tool-header p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: var(--teal);
+      border-radius: 2px;
+      margin: 24px 0;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 20px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      background: var(--teal);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-content { flex: 1; }
+
+    .step-content strong {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .step-content span {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .section-title-sm {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin: 32px 0 16px;
+    }
+
+    .output-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .output-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+
+    .output-card strong {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .output-card span {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .note {
+      background: var(--teal-light);
+      border-left: 3px solid var(--teal);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      color: var(--teal-dark);
+      line-height: 1.6;
+    }
+
+    footer {
+      background: var(--text-primary);
+      color: rgba(255,255,255,0.5);
+      padding: 20px 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+    }
+
+    footer img { height: 22px; opacity: 0.85; filter: brightness(0) invert(1); }
+
+    @media (max-width: 580px) {
+      .output-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <img src="../assets/growisto-logo.png" alt="Growisto" />
+    <span class="nav-badge">Marketplaces AI Suite</span>
+  </nav>
+
+  <div class="container">
+    <a class="back-link" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Suite
+    </a>
+
+    <div class="tool-header">
+      <span class="badge-claude">Claude Plugin</span>
+      <h1>Amazon Review Sentiment Analysis</h1>
+      <p>Turn raw Amazon review exports into a decision-ready Excel workbook in minutes. A four-stage pipeline — cleaning, AI tagging, aggregation, and delivery — produces four structured sheets covering headline KPIs, ranked problem areas, rating trends, and a feature satisfaction matrix.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">How to Use</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Open Claude</strong>
+          <span>Go to <strong>claude.ai</strong> and sign in with your Growisto account.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Go to Plugins</strong>
+          <span>Navigate to <strong>Plugins</strong> from the left sidebar or settings menu.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Install the Plugin</strong>
+          <span>Search for and install <strong>Growisto VOC Review</strong>.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Upload Your Review File</strong>
+          <span>Start a new chat, upload your Amazon review export file, and type <strong>/voc-review</strong> to begin analysis.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <strong>Receive Your Report</strong>
+          <span>The tool processes your reviews through a four-stage pipeline and delivers a branded four-sheet Excel workbook.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title-sm">What You Get</div>
+
+    <div class="output-grid">
+      <div class="output-card">
+        <strong>Summary Sheet</strong>
+        <span>Headline KPIs, average rating, verified purchase rate, cohort split, top 5 problems, and an auto-generated recommendation.</span>
+      </div>
+      <div class="output-card">
+        <strong>Problem Areas</strong>
+        <span>Recurring issues ranked by frequency with colour-coded urgency flags — red, amber, and green — for instant prioritisation.</span>
+      </div>
+      <div class="output-card">
+        <strong>Rating Trend</strong>
+        <span>Month-by-month breakdown of critical vs. positive review ratios with spike flags and recent trajectory indicators.</span>
+      </div>
+      <div class="output-card">
+        <strong>Feature Satisfaction Matrix</strong>
+        <span>Aspect-by-aspect sentiment scoring across quality, durability, sizing, delivery, and more — with a satisfaction index per feature.</span>
+      </div>
+    </div>
+
+    <div class="note">This plugin runs entirely inside Claude. Your review data stays in your session and is never stored externally.</div>
+  </div>
+
+  <footer>
+    <img src="../assets/growisto-logo.png" alt="Growisto" />
+    <span>Internal Use Only</span>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Growisto BSR Scraper — Internal Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Poppins', sans-serif; background: #367588; color: #1D1D20; min-height: 100vh; }
+
+    /* ── MAIN CONTENT ── */
+    #main-content { background: #F6F6F4; }
+
+    /* ── NAV ── */
+    nav {
+      background: #fff; border-bottom: 1.5px solid #B8DBD9;
+      padding: 0 48px; height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(54,117,136,0.07);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-logo {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: linear-gradient(135deg, #367588, #2a5c6a);
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .nav-name { font-size: 15px; font-weight: 700; color: #1D1D20; }
+    .nav-badge {
+      background: #E35D34; color: #fff; border-radius: 20px;
+      padding: 2px 8px; font-size: 10px; font-weight: 700;
+    }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: #6B7280; text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: #367588; }
+    .nav-cta {
+      background: #367588; color: #fff; border-radius: 8px;
+      padding: 8px 20px; font-size: 13px; font-weight: 600;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .nav-cta:hover { background: #2a5c6a; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #367588 0%, #2a5c6a 100%);
+      padding: 80px 48px 72px; text-align: center;
+    }
+    .hero-label {
+      display: inline-block; background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 20px;
+      padding: 5px 16px; font-size: 12px; font-weight: 600;
+      color: #B8DBD9; margin-bottom: 20px;
+    }
+    .hero h1 { font-size: 44px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 16px; }
+    .hero h1 span { color: #B8DBD9; }
+    .hero p { font-size: 16px; color: rgba(255,255,255,0.75); max-width: 540px; margin: 0 auto 36px; line-height: 1.7; }
+    .hero-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #E35D34; color: #fff; border-radius: 10px;
+      padding: 14px 32px; font-size: 15px; font-weight: 700;
+      text-decoration: none; transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 20px rgba(227,93,52,0.4);
+    }
+    .hero-btn:hover { background: #c44d27; transform: translateY(-2px); }
+    .hero-stats { display: flex; gap: 48px; justify-content: center; margin-top: 52px; flex-wrap: wrap; }
+    .hero-stat-num { font-size: 30px; font-weight: 800; color: #fff; }
+    .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+    /* ── SECTIONS ── */
+    .section { padding: 72px 48px; max-width: 1080px; margin: 0 auto; }
+    .section-tag { font-size: 11px; font-weight: 700; color: #367588; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .section-title { font-size: 30px; font-weight: 800; color: #1D1D20; margin-bottom: 10px; }
+    .section-sub { font-size: 14px; color: #6B7280; max-width: 500px; line-height: 1.7; margin-bottom: 40px; }
+
+    /* ── FEATURES ── */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feature-card {
+      background: #fff; border-radius: 14px; padding: 26px 22px;
+      border: 1.5px solid #E5E7EB;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(54,117,136,0.1); }
+    .feature-icon { font-size: 26px; margin-bottom: 12px; }
+    .feature-title { font-size: 14px; font-weight: 700; color: #1D1D20; margin-bottom: 6px; }
+    .feature-desc { font-size: 12px; color: #6B7280; line-height: 1.6; }
+
+    /* ── DOWNLOAD ── */
+    .download-section { background: #1D1D20; padding: 72px 48px; }
+    .download-inner { max-width: 1080px; margin: 0 auto; }
+    .download-section .section-tag { color: #B8DBD9; }
+    .download-section .section-title { color: #fff; }
+    .download-section .section-sub { color: rgba(255,255,255,0.5); }
+    .dl-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .dl-card {
+      background: rgba(255,255,255,0.05); border-radius: 16px;
+      border: 1.5px solid rgba(184,219,217,0.2); padding: 32px 28px;
+    }
+    .dl-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .dl-os-icon { font-size: 32px; }
+    .dl-os-name { font-size: 18px; font-weight: 700; color: #fff; }
+    .dl-os-req { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .dl-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #E35D34; color: #fff; border-radius: 10px;
+      padding: 14px 24px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: background 0.2s, transform 0.15s;
+      margin-bottom: 20px;
+    }
+    .dl-btn:hover { background: #c44d27; transform: translateY(-2px); }
+    .dl-btn-mac { background: #367588; }
+    .dl-btn-mac:hover { background: #2a5c6a; }
+    .dl-note { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+    .dl-steps { list-style: none; margin-top: 16px; }
+    .dl-steps li {
+      font-size: 12px; color: rgba(255,255,255,0.55);
+      padding: 5px 0; display: flex; align-items: flex-start; gap: 8px;
+    }
+    .dl-steps li::before {
+      content: ''; min-width: 5px; height: 5px; border-radius: 50%;
+      background: #367588; margin-top: 5px; flex-shrink: 0;
+    }
+    .pw-display {
+      margin-top: 24px; background: rgba(184,219,217,0.08);
+      border: 1.5px solid rgba(184,219,217,0.2); border-radius: 10px;
+      padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+    }
+    .pw-display-label { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .pw-display-val { font-size: 15px; font-weight: 700; color: #B8DBD9; font-family: monospace; }
+
+    /* ── HOW TO USE ── */
+    .how-section { background: #fff; padding: 72px 48px; }
+    .how-inner { max-width: 1080px; margin: 0 auto; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 32px; }
+    .tab-btn {
+      padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      border: 1.5px solid #E5E7EB; background: #fff; color: #6B7280;
+      cursor: pointer; font-family: 'Poppins', sans-serif; transition: all 0.2s;
+    }
+    .tab-btn.active { background: #367588; color: #fff; border-color: #367588; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .steps-list { display: flex; flex-direction: column; gap: 20px; }
+    .step {
+      display: flex; gap: 18px; align-items: flex-start;
+      background: #F6F6F4; border-radius: 12px; padding: 20px 22px;
+    }
+    .step-num {
+      min-width: 36px; height: 36px; border-radius: 50%;
+      background: #367588; color: #fff; font-weight: 800; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-title { font-size: 14px; font-weight: 700; color: #1D1D20; margin-bottom: 4px; }
+    .step-desc { font-size: 13px; color: #6B7280; line-height: 1.6; }
+    .step-code {
+      margin-top: 8px; background: #1D1D20; border-radius: 6px;
+      padding: 10px 14px; font-family: monospace; font-size: 12px;
+      color: #B8DBD9; word-break: break-all;
+    }
+
+    /* ── MARKETPLACES ── */
+    .market-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .market-chip {
+      background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px;
+      padding: 10px 16px; font-size: 13px; font-weight: 600; color: #1D1D20;
+      display: flex; align-items: center; gap: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .market-chip:hover { border-color: #367588; background: #eaf4f5; }
+    .market-chip .code { color: #367588; font-weight: 700; }
+    .market-chip .domain { font-size: 11px; color: #9CA3AF; font-weight: 400; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #1D1D20; border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 28px 48px; text-align: center;
+    }
+    footer p { font-size: 12px; color: rgba(255,255,255,0.3); }
+    footer span { color: #367588; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 28px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .dl-cards { grid-template-columns: 1fr; }
+      nav .nav-links { display: none; }
+      .section, .download-section, .how-section { padding: 48px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">📊</div>
+      <span class="nav-name">BSR Scraper</span>
+      <span class="nav-badge">v1.0</span>
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="#how-to-use">How to use</a>
+      <a href="#marketplaces">Marketplaces</a>
+    </div>
+    <a href="#download" class="nav-cta">Get Started →</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-label">🚀 Amazon Intelligence Tool · Growisto Internal</div>
+    <h1>Track BSR Data Across<br/><span>Any Amazon Marketplace</span></h1>
+    <p>Scrape Best Seller Rank data for multiple ASINs simultaneously — no APIs, no subscriptions. Runs entirely on your machine.</p>
+    <a href="#download" class="hero-btn">⬇️ Download &amp; Install</a>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num">12</div><div class="hero-stat-label">Marketplaces</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">100+</div><div class="hero-stat-label">ASINs per run</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">0</div><div class="hero-stat-label">APIs needed</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">1-click</div><div class="hero-stat-label">Desktop launch</div></div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div id="features">
+    <div class="section">
+      <div class="section-tag">Why use it</div>
+      <div class="section-title">Everything you need for BSR tracking</div>
+      <div class="section-sub">Built for Amazon ads teams that need fast, reliable BSR data without depending on paid tools.</div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🌍</div>
+          <div class="feature-title">12 Marketplaces</div>
+          <div class="feature-desc">US, UK, DE, IN, CA, AU, FR, ES, IT, JP, MX, AE — each scraped with the correct locale and language.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Bulk Scraping</div>
+          <div class="feature-desc">Paste 100+ ASINs at once or upload a pre-filled Excel template for mixed marketplaces.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Live Progress</div>
+          <div class="feature-desc">Real-time logs, progress bar, and live stats as each ASIN is scraped automatically.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <div class="feature-title">Branded Excel Output</div>
+          <div class="feature-desc">Growisto-branded Excel report with main BSR, sub-category ranks, and product titles.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🖥️</div>
+          <div class="feature-title">Runs Locally</div>
+          <div class="feature-desc">Runs entirely on your machine. No data leaves your computer. No subscriptions, no API keys.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD -->
+  <div class="download-section" id="download">
+    <div class="download-inner">
+      <div class="section-tag">Get started</div>
+      <div class="section-title">Download &amp; Install</div>
+      <div class="section-sub">One zip file. Run the installer once. A desktop shortcut is created automatically.</div>
+      <div class="dl-cards">
+
+        <!-- MAC -->
+        <div class="dl-card">
+          <div class="dl-card-header">
+            <div class="dl-os-icon">🍎</div>
+            <div>
+              <div class="dl-os-name">Mac</div>
+              <div class="dl-os-req">macOS 11+ · Python 3.9+ required</div>
+            </div>
+          </div>
+          <a href="https://github.com/hardikamin-ux/growisto-bsr-scraper/archive/refs/heads/main.zip" class="dl-btn dl-btn-mac">⬇️ Download for Mac</a>
+          <ul class="dl-steps">
+            <li>Download and unzip the file</li>
+            <li>Open Terminal, drag <strong style="color:#B8DBD9">install_mac.sh</strong> into it, press Enter</li>
+            <li>Installs all packages + Chromium (~3–5 min)</li>
+            <li><strong style="color:#B8DBD9">Growisto BSR Scraper</strong> shortcut appears on your Desktop</li>
+            <li>Double-click the shortcut anytime to launch</li>
+          </ul>
+          <div class="dl-note" style="margin-top:14px;">
+            If macOS blocks the file: System Settings → Privacy &amp; Security → Open Anyway
+          </div>
+        </div>
+
+        <!-- WINDOWS -->
+        <div class="dl-card">
+          <div class="dl-card-header">
+            <div class="dl-os-icon">🪟</div>
+            <div>
+              <div class="dl-os-name">Windows</div>
+              <div class="dl-os-req">Windows 10/11 · Python 3.11 or 3.12 required</div>
+            </div>
+          </div>
+          <a href="https://github.com/hardikamin-ux/growisto-bsr-scraper/archive/refs/heads/main.zip" class="dl-btn">⬇️ Download for Windows</a>
+          <ul class="dl-steps">
+            <li><strong style="color:#E35D34">Install Python 3.12 first</strong> (see below) — required</li>
+            <li>Download and unzip the BSR file above</li>
+            <li>Right-click <strong style="color:#B8DBD9">install_windows.bat</strong> → Run as administrator</li>
+            <li>Installs all packages + Chromium (~3–5 min)</li>
+            <li><strong style="color:#B8DBD9">Growisto BSR Scraper</strong> shortcut appears on your Desktop</li>
+            <li>Double-click the shortcut anytime to launch</li>
+          </ul>
+          <div class="dl-note" style="margin-top:14px;">
+            If Windows Defender warns: click More info → Run anyway
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PYTHON INSTALL GUIDE (Windows) -->
+      <div style="margin-top:20px; padding:20px 22px; border-radius:12px; background:rgba(227,93,52,0.08); border:1.5px solid rgba(227,93,52,0.25);">
+        <p style="font-size:14px; font-weight:700; color:#E35D34; margin-bottom:10px; letter-spacing:0.3px;">
+          ⚠️ PYTHON SETUP — WINDOWS USERS (DO THIS FIRST)
+        </p>
+        <p style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.7; margin-bottom:14px;">
+          <strong style="color:#fff;">Important:</strong> Use Python <strong style="color:#B8DBD9;">3.11 or 3.12</strong> only.
+          The latest version (3.14) is too new and breaks Streamlit. Do <strong style="color:#E35D34;">NOT</strong> use Python from the Microsoft Store.
+        </p>
+        <ol style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.9; padding-left:18px; margin-bottom:0;">
+          <li>Go to <a href="https://www.python.org/downloads/release/python-31210/" style="color:#B8DBD9; font-weight:600;" target="_blank">python.org/downloads/release/python-31210</a> (Python 3.12.10)</li>
+          <li>Scroll down to the <strong style="color:#fff;">"Files"</strong> section</li>
+          <li>Click <strong style="color:#B8DBD9;">"Windows installer (64-bit)"</strong> to download</li>
+          <li>Open the downloaded <code style="background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px; color:#B8DBD9;">.exe</code> file</li>
+          <li><strong style="color:#E35D34;">CRITICAL:</strong> On the first screen, tick the box at the bottom — <strong style="color:#fff;">"Add python.exe to PATH"</strong></li>
+          <li>Click <strong style="color:#B8DBD9;">"Install Now"</strong> and wait ~2 minutes</li>
+          <li><strong style="color:#fff;">Restart your computer</strong> so PATH takes effect</li>
+          <li>Now run the BSR installer above</li>
+        </ol>
+        <p style="font-size:11px; color:rgba(255,255,255,0.45); line-height:1.6; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+          <strong style="color:#E35D34;">Already have Python 3.14 or Microsoft Store Python?</strong>
+          Uninstall it first: Settings → Apps → search for Python → Uninstall. Then follow the steps above.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO USE -->
+  <div class="how-section" id="how-to-use">
+    <div class="how-inner">
+      <div class="section-tag">Setup guide</div>
+      <div class="section-title">How to set up</div>
+      <div class="section-sub">One-time setup takes about 5 minutes.</div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('mac', this)">🍎 Mac</button>
+        <button class="tab-btn" onclick="showTab('win', this)">🪟 Windows</button>
+      </div>
+
+      <div id="tab-mac" class="tab-content active">
+        <div class="steps-list">
+          <div class="step"><div class="step-num">1</div><div><div class="step-title">Download &amp; unzip</div><div class="step-desc">Click Download for Mac above. Find the zip in your Downloads folder and double-click to unzip it.</div></div></div>
+          <div class="step"><div class="step-num">2</div><div><div class="step-title">Run the installer</div><div class="step-desc">Open Terminal. Drag <strong>install_mac.sh</strong> from the unzipped folder into Terminal, then press Enter.</div><div class="step-code">bash ~/Downloads/growisto-bsr-scraper-main/install_mac.sh</div></div></div>
+          <div class="step"><div class="step-num">3</div><div><div class="step-title">Wait for setup</div><div class="step-desc">The installer downloads Python packages and Chromium (~3–5 minutes). Don't close the Terminal window.</div></div></div>
+          <div class="step"><div class="step-num">4</div><div><div class="step-title">Launch the app</div><div class="step-desc">A <strong>Growisto BSR Scraper</strong> shortcut appears on your Desktop. Double-click it — the app opens in your browser automatically.</div></div></div>
+        </div>
+      </div>
+
+      <div id="tab-win" class="tab-content">
+        <div class="steps-list">
+          <div class="step"><div class="step-num">1</div><div><div class="step-title">Download &amp; unzip</div><div class="step-desc">Click Download for Windows above. Right-click the zip → Extract All → choose a folder.</div></div></div>
+          <div class="step"><div class="step-num">2</div><div><div class="step-title">Run the installer</div><div class="step-desc">Inside the unzipped folder, right-click <strong>install_windows.bat</strong> → Run as administrator. If Windows Defender warns: click More info → Run anyway.</div></div></div>
+          <div class="step"><div class="step-num">3</div><div><div class="step-title">Wait for setup</div><div class="step-desc">The installer downloads Python packages and Chromium (~3–5 minutes). Don't close the Command Prompt window.</div></div></div>
+          <div class="step"><div class="step-num">4</div><div><div class="step-title">Launch the app</div><div class="step-desc">A <strong>Growisto BSR Scraper</strong> shortcut appears on your Desktop. Double-click it — the app opens in your browser automatically.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKETPLACES -->
+  <div id="marketplaces">
+    <div class="section">
+      <div class="section-tag">Coverage</div>
+      <div class="section-title">12 Amazon Marketplaces</div>
+      <div class="section-sub">Each marketplace uses the correct locale, language, and timezone for accurate results.</div>
+      <div class="market-grid">
+        <div class="market-chip"><span>🇺🇸</span><span class="code">US</span><span class="domain">amazon.com</span></div>
+        <div class="market-chip"><span>🇬🇧</span><span class="code">UK</span><span class="domain">amazon.co.uk</span></div>
+        <div class="market-chip"><span>🇩🇪</span><span class="code">DE</span><span class="domain">amazon.de</span></div>
+        <div class="market-chip"><span>🇮🇳</span><span class="code">IN</span><span class="domain">amazon.in</span></div>
+        <div class="market-chip"><span>🇨🇦</span><span class="code">CA</span><span class="domain">amazon.ca</span></div>
+        <div class="market-chip"><span>🇦🇺</span><span class="code">AU</span><span class="domain">amazon.com.au</span></div>
+        <div class="market-chip"><span>🇫🇷</span><span class="code">FR</span><span class="domain">amazon.fr</span></div>
+        <div class="market-chip"><span>🇪🇸</span><span class="code">ES</span><span class="domain">amazon.es</span></div>
+        <div class="market-chip"><span>🇮🇹</span><span class="code">IT</span><span class="domain">amazon.it</span></div>
+        <div class="market-chip"><span>🇯🇵</span><span class="code">JP</span><span class="domain">amazon.co.jp</span></div>
+        <div class="market-chip"><span>🇲🇽</span><span class="code">MX</span><span class="domain">amazon.com.mx</span></div>
+        <div class="market-chip"><span>🇦🇪</span><span class="code">AE</span><span class="domain">amazon.ae</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Growisto BSR Scraper · V1 · <span>Growisto</span> Internal Tool · Do not share outside the team</p>
+  </footer>
+
+</div>
+
+<script>
+  function showTab(os, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + os).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>

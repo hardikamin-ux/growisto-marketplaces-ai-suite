@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon India Review Scraper — Growisto Internal Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:    #367588;
+      --powder:  #B8DBD9;
+      --flame:   #E35D34;
+      --raisin:  #1D1D20;
+      --cultured:#F6F6F4;
+      --white:   #FFFFFF;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--cultured);
+      color: var(--raisin);
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background-color: var(--teal);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--white);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+    .brand-name {
+      color: var(--white);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.01em;
+    }
+    .badge {
+      background: var(--powder);
+      color: var(--teal);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--teal) 0%, #2a5d6e 100%);
+      color: var(--white);
+      padding: 4rem 2rem 5rem;
+      text-align: center;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(184,219,217,0.25);
+      color: var(--powder);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
+      border: 1px solid rgba(184,219,217,0.4);
+      margin-bottom: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--powder);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background-color: var(--flame);
+      color: var(--white);
+      border: none;
+    }
+    .btn-primary:hover { background-color: #c94f2a; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.1); }
+
+    /* ── Features ── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3.5rem 2rem;
+    }
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.3rem;
+    }
+    .section-sub {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+    }
+    .feature-card {
+      background: var(--white);
+      border: 1px solid #e5e5e5;
+      border-top: 3px solid var(--powder);
+      border-radius: 10px;
+      padding: 1.4rem;
+    }
+    .feature-card .icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
+    .feature-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .feature-card p { font-size: 0.85rem; color: #555; }
+
+    /* ── Download Section ── */
+    .download-section {
+      background: var(--white);
+      border-top: 1px solid #e5e5e5;
+    }
+    .download-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 600px) {
+      .download-cards { grid-template-columns: 1fr; }
+    }
+    .dl-card {
+      background: var(--cultured);
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .dl-card .os-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+    .dl-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .dl-card p { font-size: 0.85rem; color: #666; margin-bottom: 1.4rem; }
+    .dl-card .btn { width: 100%; justify-content: center; }
+    .req {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 0.6rem;
+    }
+
+    /* ── Setup Steps ── */
+    .setup-section { background: var(--cultured); border-top: 1px solid #e5e5e5; }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      counter-reset: step-counter;
+    }
+    .step {
+      background: var(--white);
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      padding: 1.4rem;
+      position: relative;
+      counter-increment: step-counter;
+    }
+    .step::before {
+      content: counter(step-counter);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--teal);
+      color: var(--white);
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+    }
+    .step h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .step p { font-size: 0.82rem; color: #555; }
+    .step .note {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background: var(--powder);
+      color: var(--teal);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    /* ── Important Notice ── */
+    .notice {
+      background: #fff8f5;
+      border: 1px solid var(--flame);
+      border-left: 4px solid var(--flame);
+      border-radius: 8px;
+      padding: 1.2rem 1.5rem;
+      margin-top: 2rem;
+    }
+    .notice h4 { color: var(--flame); font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .notice p { font-size: 0.85rem; color: var(--raisin); }
+    .notice a { color: var(--teal); font-weight: 600; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--raisin);
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 1.5rem 2rem;
+      font-size: 0.82rem;
+    }
+    footer strong { color: var(--powder); }
+
+    /* ── OS Tabs ── */
+    .tab-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--powder);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #666;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      color: var(--teal);
+      font-weight: 700;
+      border-bottom-color: var(--teal);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .code-block {
+      background: var(--raisin);
+      color: var(--powder);
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      padding: 0.8rem 1rem;
+      border-radius: 6px;
+      margin-top: 0.4rem;
+      overflow-x: auto;
+    }
+    .inline-step { margin-bottom: 0.8rem; }
+    .inline-step strong { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">🛒</div>
+    <span class="brand-name">Amazon Review Scraper</span>
+  </div>
+  <span class="badge">Internal Tool · V1</span>
+</header>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-tag">Growisto Internal Tool</div>
+  <h1>Amazon India<br>Review Scraper</h1>
+  <p>Scrape every written customer review from any Amazon India product and export to Excel — fully automated, runs on your own machine.</p>
+  <div class="hero-btns">
+    <a href="#download" class="btn btn-primary">⬇️ Download &amp; Install</a>
+    <a href="#how-it-works" class="btn btn-outline">How it works</a>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section class="section" id="how-it-works">
+  <div class="section-title">What does this tool do?</div>
+  <div class="section-sub">Everything runs on your machine — your account, your data, your control.</div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h3>Scrapes all written reviews</h3>
+      <p>Rotates through all 5 star filters and collects every written review for any Amazon India ASIN.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Excel export, ready to use</h3>
+      <p>Reviewer name, rating, title, date, full review text, verified purchase, helpful votes.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔐</div>
+      <h3>Your burner account</h3>
+      <p>Sign in once with your own Amazon India burner account. Session saves so you never sign in again.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🖥️</div>
+      <h3>Web UI — no code needed</h3>
+      <p>Simple browser interface. Paste an ASIN, click Scrape, download the file. That's it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Download ── -->
+<section class="download-section" id="download">
+  <div class="section">
+    <div class="section-title">Download &amp; Install</div>
+    <div class="section-sub">One zip file. Run the installer once. That's it.</div>
+
+    <div class="download-cards">
+      <div class="dl-card">
+        <div class="os-icon">🍎</div>
+        <h3>Mac</h3>
+        <p>macOS 11 Big Sur or newer recommended</p>
+        <a href="https://github.com/hardikamin-ux/amazon-review-scraper/archive/refs/heads/main.zip"
+           class="btn btn-primary">⬇️ Download for Mac</a>
+        <div class="req">Requires Python 3.9+ · ~150 MB one-time download</div>
+      </div>
+
+      <div class="dl-card">
+        <div class="os-icon">🪟</div>
+        <h3>Windows</h3>
+        <p>Windows 10 or Windows 11</p>
+        <a href="https://github.com/hardikamin-ux/amazon-review-scraper/archive/refs/heads/main.zip"
+           class="btn btn-primary">⬇️ Download for Windows</a>
+        <div class="req">Requires Python 3.9+ · ~150 MB one-time download</div>
+      </div>
+    </div>
+
+    <!-- Important notice -->
+    <div class="notice">
+      <h4>⚠️ Before you install</h4>
+      <p>
+        Each person must use their own dedicated <strong>burner Amazon India account</strong> — never your personal account.
+        Create a fresh Gmail address → register on amazon.in → that's your scraper account.
+        <br><br>
+        The tool stores your session locally in a <code>.browser_profile</code> folder inside the app directory.
+        Never share this folder with anyone.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Setup Steps ── -->
+<section class="setup-section">
+  <div class="section" id="setup">
+    <div class="section-title">How to set up</div>
+    <div class="section-sub">One-time setup takes about 5 minutes.</div>
+
+    <!-- OS tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="showTab('mac', this)">🍎 Mac</button>
+      <button class="tab-btn" onclick="showTab('win', this)">🪟 Windows</button>
+    </div>
+
+    <div id="tab-mac" class="tab-content active">
+      <div class="inline-step">
+        <strong>Step 1 — Download &amp; extract</strong>
+        <p>Click <em>Download for Mac</em> above. Find the zip in your Downloads folder and double-click to extract it.</p>
+      </div>
+      <div class="inline-step">
+        <strong>Step 2 — Run the installer</strong>
+        <p>Open Terminal. Drag <code>install-mac.command</code> from the extracted folder into the Terminal window, then press Enter.</p>
+        <div class="code-block">bash ~/Downloads/amazon-review-scraper-main/install-mac.command</div>
+        <p style="margin-top:0.5rem;font-size:0.82rem;color:#555;">If macOS blocks the file: System Settings → Privacy &amp; Security → click <strong>Open Anyway</strong>.</p>
+      </div>
+      <div class="inline-step">
+        <strong>Step 3 — Wait for setup</strong>
+        <p>The installer installs Python packages and the Chrome browser (~3–5 minutes). Don't close the Terminal window.</p>
+      </div>
+      <div class="inline-step">
+        <strong>Step 4 — Launch the app</strong>
+        <p>When complete, an <strong>Amazon Scraper</strong> shortcut appears on your Desktop. Double-click it to open the tool in your browser.</p>
+      </div>
+    </div>
+
+    <div id="tab-win" class="tab-content">
+      <div class="inline-step">
+        <strong>Step 1 — Download &amp; extract</strong>
+        <p>Click <em>Download for Windows</em> above. Right-click the zip → <em>Extract All</em> → choose a folder.</p>
+      </div>
+      <div class="inline-step">
+        <strong>Step 2 — Run the installer</strong>
+        <p>Inside the extracted folder, right-click <code>install-windows.bat</code> → <strong>Run as administrator</strong>.</p>
+        <p style="margin-top:0.4rem;font-size:0.82rem;color:#555;">If Windows Defender shows a warning: click <strong>More info</strong> → <strong>Run anyway</strong>.</p>
+      </div>
+      <div class="inline-step">
+        <strong>Step 3 — Wait for setup</strong>
+        <p>The installer installs Python packages and the Chrome browser (~3–5 minutes). Don't close the Command Prompt window.</p>
+      </div>
+      <div class="inline-step">
+        <strong>Step 4 — Launch the app</strong>
+        <p>When complete, an <strong>Amazon Scraper</strong> shortcut appears on your Desktop. Double-click it to open the tool in your browser.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <div class="section-title" style="font-size:1.1rem;margin-bottom:1rem;">After setup — using the scraper</div>
+      <div class="steps-grid">
+        <div class="step">
+          <h4>Create a burner account</h4>
+          <p>New Gmail → register on amazon.in. Skip phone/card. Only takes 2 minutes.</p>
+          <span class="note">One-time only</span>
+        </div>
+        <div class="step">
+          <h4>Find the ASIN</h4>
+          <p>Open the Amazon India product page. The ASIN is the 10-character code after <code>/dp/</code> in the URL.</p>
+        </div>
+        <div class="step">
+          <h4>Launch the scraper</h4>
+          <p>Double-click <strong>Amazon Scraper</strong> on your Desktop. Your browser opens automatically.</p>
+        </div>
+        <div class="step">
+          <h4>Paste &amp; scrape</h4>
+          <p>Paste the ASIN, choose a star filter (or keep All stars), and click <strong>Scrape</strong>.</p>
+        </div>
+        <div class="step">
+          <h4>Sign in (first time only)</h4>
+          <p>Chrome opens for your burner account sign-in. Do it once — session saves forever.</p>
+          <span class="note">One-time only</span>
+        </div>
+        <div class="step">
+          <h4>Download the Excel</h4>
+          <p>When the scrape completes, click <strong>📥 Download Excel</strong> to save the file.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>
+    <strong>Amazon India Review Scraper · V1</strong>
+    &nbsp;·&nbsp; Internal Growisto Tool
+    &nbsp;·&nbsp; Do not share outside the team
+  </p>
+  <p style="margin-top:0.4rem;">Questions? Reach out to your team admin.</p>
+</footer>
+
+<script>
+  function showTab(os, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + os).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+
+</body>
+</html>
