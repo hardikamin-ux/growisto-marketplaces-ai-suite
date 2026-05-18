@@ -425,9 +425,232 @@
       .grid { grid-template-columns: 1fr; }
       .hero { padding: 48px 1.5rem 36px; }
     }
+
+    /* ENTRY GATE */
+    #entry-gate {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .gate-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px 36px;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(61,112,128,0.12);
+      text-align: center;
+    }
+
+    .gate-logo { height: 30px; margin-bottom: 10px; }
+
+    .gate-divider {
+      width: 40px;
+      height: 3px;
+      background: var(--teal);
+      border-radius: 2px;
+      margin: 16px auto 24px;
+    }
+
+    .gate-card h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .gate-sub {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .gate-field {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+
+    .gate-field label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .gate-field select {
+      width: 100%;
+      padding: 11px 36px 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.84rem;
+      color: var(--text-primary);
+      background: var(--white);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .gate-field select:focus { outline: none; border-color: var(--teal); }
+
+    .gate-error {
+      font-size: 0.75rem;
+      color: #dc2626;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .gate-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--teal);
+      color: var(--white);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+
+    .gate-btn:hover { background: var(--teal-dark); }
+
+    .gate-note {
+      font-size: 0.68rem;
+      color: #bbb;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
+
+  <!-- ENTRY GATE -->
+  <div id="entry-gate">
+    <div class="gate-card">
+      <img src="assets/growisto-logo.png" alt="Growisto" class="gate-logo" />
+      <div class="gate-divider"></div>
+      <h2>Marketplaces AI Suite</h2>
+      <p class="gate-sub">Select your name and the project you're working on to access the suite.</p>
+
+      <div class="gate-field">
+        <label>Your Name</label>
+        <select id="gate-name">
+          <option value="">— Select your name —</option>
+          <option>Aashay Sakalley</option>
+          <option>Abhijeet Singh Rajput</option>
+          <option>Abhishek Shukla</option>
+          <option>Agrawal Sourabh</option>
+          <option>Anil Jaiswar</option>
+          <option>Aniket Shirsat</option>
+          <option>Anmol Yadav</option>
+          <option>Aryan Lamba</option>
+          <option>Chiranshu Dhingra</option>
+          <option>Divya Vishnani</option>
+          <option>Divyansh Singh Sisodiya</option>
+          <option>Gaurav Mahajan</option>
+          <option>Gaurav Nandkishor Pande</option>
+          <option>Ghodvinde Prajwal</option>
+          <option>Hardik Amin</option>
+          <option>Harshit Bajpai</option>
+          <option>Kaustubh Nagawade</option>
+          <option>Manisha Chauhan</option>
+          <option>Mansi Mange</option>
+          <option>Mayank Shukla</option>
+          <option>Nabeel Shaikh</option>
+          <option>Navin Sachdev</option>
+          <option>Nidhi Mali</option>
+          <option>Nikhit Rapelli</option>
+          <option>Nilesh Pawar</option>
+          <option>Paridhi Shukla</option>
+          <option>Prateek Negi</option>
+          <option>Prerna Punjabi</option>
+          <option>Princy Deepak</option>
+          <option>Puja Priya</option>
+          <option>Rohil Arora</option>
+          <option>Rupal Verma</option>
+          <option>Saba Khan</option>
+          <option>Shivani Mirchandani</option>
+          <option>Shristi S</option>
+          <option>Shrushti Mane</option>
+          <option>Souvik Paul</option>
+          <option>Swapnanil Sarkar</option>
+          <option>Tanay Sharma</option>
+          <option>Tuhiin Puri</option>
+          <option>Vidhi Mange</option>
+          <option>Yash Khurana</option>
+        </select>
+        <div class="gate-error" id="err-name">Please select your name.</div>
+      </div>
+
+      <div class="gate-field">
+        <label>Current Project</label>
+        <select id="gate-project">
+          <option value="">— Select a project —</option>
+          <option>RealkBeauty</option>
+          <option>Technosport</option>
+          <option>Jean Rish</option>
+          <option>Voyager Harness TikTok Ads</option>
+          <option>Heads Up For Tails</option>
+          <option>The Solved Skin</option>
+          <option>Arvind Fashions</option>
+          <option>Covers and All</option>
+          <option>Silverist Amazon</option>
+          <option>Oziva - Flipkart</option>
+          <option>TRNR</option>
+          <option>Dermasensa</option>
+          <option>Vishvaura Ventures - Amazon</option>
+          <option>Ultrahuman</option>
+          <option>Smart Wheels</option>
+          <option>TiresNMore</option>
+          <option>Jean Rish - Closed</option>
+          <option>Resq Jewelery</option>
+          <option>Everlayer</option>
+          <option>Louis Philippe</option>
+          <option>Reebok</option>
+          <option>Lagom Foods</option>
+          <option>Mayorga DSP + AMC</option>
+          <option>GNC</option>
+          <option>Indian Garage Co</option>
+          <option>Mayorga Coffee</option>
+          <option>Jewelili</option>
+          <option>MMS Trading</option>
+          <option>Horse Consulting - FTE</option>
+          <option>Gurunanda - FTE</option>
+          <option>TMRW - Nauti Nati</option>
+          <option>TMRW - Vierdo &amp; Juneberry</option>
+          <option>Bewakoof - Amazon Marketing</option>
+          <option>TMRW - Urbano</option>
+          <option>MSI</option>
+          <option>Wella</option>
+          <option>Yogabar</option>
+          <option>Oswal Publishers</option>
+        </select>
+        <div class="gate-error" id="err-project">Please select a project.</div>
+      </div>
+
+      <button class="gate-btn" onclick="submitGate()">Enter Suite →</button>
+      <p class="gate-note">Usage is tracked for internal productivity insights only.</p>
+    </div>
+  </div>
+
+  <div id="suite-content" style="display:none;">
 
   <!-- NAV -->
   <nav>
@@ -474,7 +697,7 @@
           <span class="tag">PPC</span>
           <span class="tag">Keepa</span>
         </div>
-        <a class="btn" href="/search-term-harvest-and-negate-tool/">→ Launch Tool</a>
+        <a class="btn" href="/search-term-harvest-and-negate-tool/" onclick="trackTool('Search Term Harvest & Negate Tool')">→ Launch Tool</a>
       </div>
 
       <!-- ASIN Analyser -->
@@ -496,7 +719,7 @@
           <span class="tag">Pivot Table</span>
           <span class="tag">Ad Performance</span>
         </div>
-        <a class="btn" href="/asin-performance-analyser/">→ Launch Tool</a>
+        <a class="btn" href="/asin-performance-analyser/" onclick="trackTool('ASIN Performance Analyser')">→ Launch Tool</a>
       </div>
 
       <!-- Amazon Listing Generator -->
@@ -518,7 +741,7 @@
           <span class="tag">Bullets</span>
           <span class="tag">Excel Export</span>
         </div>
-        <a class="btn btn-outline" href="/amazon-listing-generator/">How to Use</a>
+        <a class="btn btn-outline" href="/amazon-listing-generator/" onclick="trackTool('Amazon Listing Generator')">How to Use</a>
       </div>
 
       <!-- BSR Scrapper -->
@@ -539,7 +762,7 @@
           <span class="tag">Bulk Scrape</span>
           <span class="tag">Excel Export</span>
         </div>
-        <a class="btn" href="/bsr-scrapper/">→ Launch Tool</a>
+        <a class="btn" href="/bsr-scrapper/" onclick="trackTool('BSR Scrapper')">→ Launch Tool</a>
       </div>
 
       <!-- Amazon Review Scrapper -->
@@ -561,7 +784,7 @@
           <span class="tag">VOC</span>
           <span class="tag">Desktop App</span>
         </div>
-        <a class="btn" href="/amazon-review-scrapper/">→ Launch Tool</a>
+        <a class="btn" href="/amazon-review-scrapper/" onclick="trackTool('Amazon Review Scrapper')">→ Launch Tool</a>
       </div>
 
       <!-- VOC Review Sentiment -->
@@ -583,7 +806,7 @@
           <span class="tag">Excel Report</span>
           <span class="tag">AI Analysis</span>
         </div>
-        <a class="btn btn-outline" href="/amazon-review-sentiment-analysis/">How to Use</a>
+        <a class="btn btn-outline" href="/amazon-review-sentiment-analysis/" onclick="trackTool('Amazon Review Sentiment Analysis')">How to Use</a>
       </div>
 
       <!-- FBA Fees Calculator -->
@@ -605,11 +828,13 @@
           <span class="tag">Amazon US</span>
           <span class="tag">Amazon India</span>
         </div>
-        <a class="btn" href="/fba-fees-calculator/">→ Launch Tool</a>
+        <a class="btn" href="/fba-fees-calculator/" onclick="trackTool('Amazon FBA Fees Calculator')">→ Launch Tool</a>
       </div>
 
     </div>
   </div>
+
+  </div><!-- /suite-content -->
 
   <!-- FOOTER -->
   <footer>
@@ -619,57 +844,98 @@
   </footer>
 
   <script>
-    // Auto-count cards on load
-    document.getElementById('tool-count').textContent = document.querySelectorAll('.card').length;
+    // ── Tracking ────────────────────────────────────────────────────────────────
+    const TRACKING_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
+    function logEvent(tool, action) {
+      const name    = sessionStorage.getItem('gs_name');
+      const project = sessionStorage.getItem('gs_project');
+      if (!name || !project || TRACKING_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+      const now = new Date();
+      const payload = JSON.stringify({
+        date:      now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        timestamp: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+        name, project, tool, action
+      });
+      if (action === 'Closed') {
+        navigator.sendBeacon(TRACKING_URL, new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch(TRACKING_URL, { method: 'POST', body: payload, keepalive: true }).catch(() => {});
+      }
+    }
+
+    function trackTool(toolName) { logEvent(toolName, 'Tool Clicked'); }
+
+    // Heartbeat + idle
+    let heartbeatTimer, idleTimer, isIdle = false;
+    const IDLE_MS      = 10 * 60 * 1000;
+    const HEARTBEAT_MS = 60 * 1000;
+
+    function startHeartbeat() {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = setInterval(() => { if (!isIdle) logEvent('Suite', 'Heartbeat'); }, HEARTBEAT_MS);
+    }
+
+    function resetIdle() {
+      clearTimeout(idleTimer);
+      if (isIdle) { isIdle = false; logEvent('Suite', 'Resumed'); startHeartbeat(); }
+      idleTimer = setTimeout(() => {
+        isIdle = true;
+        clearInterval(heartbeatTimer);
+        logEvent('Suite', 'Idle');
+      }, IDLE_MS);
+    }
+
+    ['mousemove', 'click', 'keypress', 'scroll', 'touchstart'].forEach(e =>
+      document.addEventListener(e, resetIdle, { passive: true })
+    );
+
+    window.addEventListener('beforeunload', () => logEvent('Suite', 'Closed'));
+
+    // ── Entry gate ───────────────────────────────────────────────────────────────
+    function showSuite() {
+      document.getElementById('entry-gate').style.display  = 'none';
+      document.getElementById('suite-content').style.display = 'block';
+      document.getElementById('tool-count').textContent = document.querySelectorAll('.card').length;
+      logEvent('Suite', 'Opened');
+      startHeartbeat();
+      resetIdle();
+      const d = new Date();
+      document.getElementById('footer-date').textContent =
+        d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function submitGate() {
+      const name    = document.getElementById('gate-name').value;
+      const project = document.getElementById('gate-project').value;
+      let valid = true;
+      document.getElementById('err-name').style.display    = name    ? 'none' : (valid = false, 'block');
+      document.getElementById('err-project').style.display = project ? 'none' : (valid = false, 'block');
+      if (!valid) return;
+      sessionStorage.setItem('gs_name',    name);
+      sessionStorage.setItem('gs_project', project);
+      logEvent('Suite', 'Session Started');
+      showSuite();
+    }
+
+    // Skip gate if already in session (e.g. navigated back from a tool)
+    if (sessionStorage.getItem('gs_name') && sessionStorage.getItem('gs_project')) {
+      showSuite();
+    }
+
+    // ── Search ───────────────────────────────────────────────────────────────────
     function filterTools() {
       const query = document.getElementById('search-input').value.toLowerCase().trim();
       const cards = document.querySelectorAll('.card');
       let visible = 0;
       cards.forEach(card => {
-        const text = card.innerText.toLowerCase();
-        const match = text.includes(query);
+        const match = card.innerText.toLowerCase().includes(query);
         card.style.display = match ? '' : 'none';
         if (match) visible++;
       });
       document.getElementById('tool-count').textContent = visible;
       document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
     }
-
-    // Footer date
-    const d = new Date();
-    document.getElementById('footer-date').textContent =
-      d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    function openModal(id) {
-      document.getElementById('modal-' + id).classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeModal(id) {
-      document.getElementById('modal-' + id).classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    // Close modal on overlay click
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      overlay.addEventListener('click', function(e) {
-        if (e.target === this) {
-          this.classList.remove('open');
-          document.body.style.overflow = '';
-        }
-      });
-    });
-
-    // Close on Escape
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay.open').forEach(m => {
-          m.classList.remove('open');
-          document.body.style.overflow = '';
-        });
-      }
-    });
   </script>
 </body>
 </html>

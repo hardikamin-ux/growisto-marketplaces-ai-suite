@@ -420,5 +420,24 @@
     });
   });
 </script>
+<script>
+  (function() {
+    const TRACKING_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+    const TOOL_NAME    = 'BSR Scrapper';
+    const IDLE_MS = 10*60*1000, BEAT_MS = 60*1000;
+    function logEvent(action) {
+      const name=sessionStorage.getItem('gs_name'), project=sessionStorage.getItem('gs_project');
+      if (!name||!project||TRACKING_URL==='YOUR_APPS_SCRIPT_URL_HERE') return;
+      const now=new Date(), payload=JSON.stringify({date:now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),timestamp:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}),name,project,tool:TOOL_NAME,action});
+      action==='Closed'?navigator.sendBeacon(TRACKING_URL,new Blob([payload],{type:'application/json'})):fetch(TRACKING_URL,{method:'POST',body:payload,keepalive:true}).catch(()=>{});
+    }
+    let beatTimer,idleTimer,isIdle=false;
+    function startBeat(){clearInterval(beatTimer);beatTimer=setInterval(()=>{if(!isIdle)logEvent('Heartbeat');},BEAT_MS);}
+    function resetIdle(){clearTimeout(idleTimer);if(isIdle){isIdle=false;logEvent('Resumed');startBeat();}idleTimer=setTimeout(()=>{isIdle=true;clearInterval(beatTimer);logEvent('Idle');},IDLE_MS);}
+    ['mousemove','click','keypress','scroll','touchstart'].forEach(e=>document.addEventListener(e,resetIdle,{passive:true}));
+    window.addEventListener('beforeunload',()=>logEvent('Closed'));
+    logEvent('Opened');startBeat();resetIdle();
+  })();
+</script>
 </body>
 </html>
