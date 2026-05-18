@@ -446,7 +446,7 @@
   <!-- TOOLS -->
   <div class="tools-section">
     <div class="tools-header">
-      <div class="section-label">Available Tools &mdash; <span id="tool-count">6</span> Tools</div>
+      <div class="section-label">Available Tools &mdash; <span id="tool-count"></span> Tools</div>
       <div class="search-wrap">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="search-input" placeholder="Search tools..." oninput="filterTools()" />
@@ -619,6 +619,9 @@
   </footer>
 
   <script>
+    // Auto-count cards on load
+    document.getElementById('tool-count').textContent = document.querySelectorAll('.card').length;
+
     function filterTools() {
       const query = document.getElementById('search-input').value.toLowerCase().trim();
       const cards = document.querySelectorAll('.card');
