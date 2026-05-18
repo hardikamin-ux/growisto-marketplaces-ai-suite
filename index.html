@@ -850,7 +850,7 @@
     function logEvent(tool, action) {
       const name    = sessionStorage.getItem('gs_name');
       const project = sessionStorage.getItem('gs_project');
-      if (!name || !project || TRACKING_URL === 'https://script.google.com/macros/s/AKfycbxf8LQkBGNWOZ7eVYoOvKpcejcbii-ULFaTEsnviP-s4CPxjIFmo7jmXjiTl5JgOLbz/exec') return;
+      if (!name || !project) return;
       const now = new Date();
       const payload = JSON.stringify({
         date:      now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
