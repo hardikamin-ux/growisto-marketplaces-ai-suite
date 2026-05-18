@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FBA Fees Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#333;display:flex;min-height:100vh}
+#sidebar{width:220px;min-width:220px;background:#3d7080;color:#fff;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+#sidebar .brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.1)}
+#sidebar .brand h2{font-size:13px;font-weight:700;line-height:1.4}
+#sidebar .brand p{font-size:10.5px;color:rgba(255,255,255,0.45);margin-top:3px}
+#sidebar nav{padding:8px 0}
+#sidebar nav a{display:block;padding:8px 16px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:12px;border-left:3px solid transparent}
+#sidebar nav a:hover{background:rgba(255,255,255,0.1);color:#fff;border-left-color:#5b8dee}
+.nav-sec{font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.3);padding:10px 16px 3px;text-transform:uppercase;letter-spacing:1px}
+.legend{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.1);margin-top:auto}
+.legend h4{font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.leg-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.leg-lbl{font-size:10.5px;color:rgba(255,255,255,0.65)}
+#main{margin-left:220px;padding:22px 26px;width:calc(100% - 220px)}
+.page-header{background:linear-gradient(135deg,#3d7080 0%,#2f5c6b 100%);color:#fff;border-radius:10px;padding:22px 26px;margin-bottom:18px}
+.page-header h1{font-size:19px;font-weight:700}
+.page-header p{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px}
+.settings-bar{background:#fff;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.settings-bar label{font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:4px}
+.settings-bar input[type=number],.settings-bar select{border:1.5px solid #ddd;border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit}
+.settings-bar input[type=number]{width:80px}
+.btn{padding:7px 13px;border-radius:6px;border:none;cursor:pointer;font-size:11.5px;font-weight:600;font-family:inherit}
+.btn-primary{background:#3d7080;color:#fff}
+.btn-primary:hover{background:#2f5c6b}
+.btn-green{background:#28a745;color:#fff}
+.btn-green:hover{background:#1e7e34}
+.btn-outline{background:#fff;color:#3d7080;border:1.5px solid #3d7080}
+.btn-sm{padding:3px 7px;font-size:10.5px;border-radius:4px}
+.btn-del{background:#f8d7da;color:#721c24;border:none;padding:3px 7px;border-radius:4px;font-size:10.5px;cursor:pointer;font-family:inherit;font-weight:600}
+.btn-del:hover{background:#f5c6cb}
+.cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.card{background:#fff;border-left:4px solid #3d7080;padding:12px 16px;border-radius:8px;flex:1;min-width:130px;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.card.np{border-left-color:#2f5c6b}.card.peak{border-left-color:#1a6e3c}.card.dg{border-left-color:#7b3f00}
+.card .val{font-size:20px;font-weight:700;color:#3d7080}
+.card .lbl{font-size:11px;color:#666;margin-top:2px}
+.table-wrap{overflow-x:auto;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+table.ct{width:100%;border-collapse:collapse;background:#fff;font-size:11.5px}
+table.ct th{background:#3d7080;color:#fff;padding:8px 9px;text-align:left;white-space:nowrap;font-size:10.5px;font-weight:600}
+table.ct th.np{background:#2f5c6b}
+table.ct th.pk{background:#1a6e3c}
+table.ct th.dgnp{background:#7b3f00}
+table.ct th.dgpk{background:#7b1a1a}
+table.ct th.act{background:#3d3d3d}
+table.ct td{padding:6px 9px;border-bottom:1px solid #f0f2f5;vertical-align:middle;white-space:nowrap}
+table.ct tr:hover td{background:#f8faff}
+.tier{display:inline-block;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:600;white-space:nowrap}
+.t-ss{background:#d4edda;color:#155724}
+.t-ls{background:#cce5ff;color:#004085}
+.t-sb{background:#fff3cd;color:#856404}
+.t-lb{background:#ffe5b4;color:#7b4000}
+.t-xl{background:#f8d7da;color:#721c24}
+.t-uk{background:#e2e3e5;color:#495057}
+.fee{font-weight:700}
+.fee-lo{color:#155724}.fee-md{color:#856404}.fee-hi{color:#c82333}
+input.p-in{width:58px;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px;font-family:inherit}
+input.asin-in{width:120px;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px;font-family:inherit}
+input.dim-in{width:52px;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px;font-family:inherit}
+.miss{color:#bbb;font-style:italic;font-size:10.5px}
+.dim-lbl{font-size:10px;color:#888}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div class="brand">
+    <div id="logo-wrap" style="background:#fff;border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:8px">
+      <img src="../assets/growisto-logo.png" alt="Growisto" style="height:22px;width:auto;display:block" onerror="document.getElementById('logo-wrap').style.display='none'">
+    </div>
+    <h2>FBA Fees Calculator</h2>
+    <p>Amazon US · India · 2025–2026</p>
+  </div>
+  <nav>
+    <div class="nav-sec">Navigate</div>
+    <a href="#top">Summary</a>
+    <a href="#calc">Calculator</a>
+  </nav>
+  <div class="legend">
+    <h4>Fee Periods</h4>
+    <div class="leg-row"><div class="leg-dot" style="background:#2f5c6b"></div><span class="leg-lbl">Non-Peak 2025 (Jan–Oct)</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:#4a6fa5"></div><span class="leg-lbl">Non-Peak 2026+ (Jan+)</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:#1a6e3c"></div><span class="leg-lbl">Peak 2025 (Oct–Jan)</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:#7b3f00"></div><span class="leg-lbl">DG Non-Peak 2025</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:#8b5e00"></div><span class="leg-lbl">DG Non-Peak 2026+</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:#7b1a1a"></div><span class="leg-lbl">DG Peak 2025</span></div>
+    <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px">
+      <div class="leg-row"><div class="leg-dot" style="background:#d4edda;border:1px solid #155724"></div><span class="leg-lbl">Small Standard</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#cce5ff;border:1px solid #004085"></div><span class="leg-lbl">Large Standard</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#fff3cd;border:1px solid #856404"></div><span class="leg-lbl">Small/Large Bulky</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#f8d7da;border:1px solid #721c24"></div><span class="leg-lbl">Extra-Large</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div class="page-header" id="top">
+    <h1 id="egg-title" onclick="eggClick()" style="cursor:default;user-select:none">Amazon FBA Fees Calculator</h1>
+    <p>Auto-calculates size tier &amp; fees for all 6 periods · Edit dims/weight inline · Add new ASINs freely</p>
+  </div>
+
+  <div class="settings-bar">
+    <div>
+      <label>Marketplace</label>
+      <select id="country" onchange="switchCountry()">
+        <option value="US">🇺🇸 Amazon US</option>
+        <option value="IN">🇮🇳 Amazon India</option>
+      </select>
+    </div>
+    <div id="stepDiv" style="display:none">
+      <label>STEP Level</label>
+      <select id="stepLevel" onchange="render()">
+        <option value="standard">Standard</option>
+        <option value="premium">Premium / Advanced</option>
+        <option value="basic">Basic</option>
+      </select>
+    </div>
+    <div id="priceDiv">
+      <label>Default Sale Price (<span class="cur-sym">$</span>)</label>
+      <input type="number" id="defPrice" value="15" min="0.01" step="0.01" oninput="render()">
+    </div>
+    <div id="pbDiv">
+      <label>Price Band Lock</label>
+      <select id="pbLock" onchange="render()">
+        <option value="auto">Auto (from price)</option>
+        <option value="0">&lt; $10</option>
+        <option value="1">$10 – $50</option>
+        <option value="2">&gt; $50</option>
+      </select>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="addRow()">+ Add ASIN</button>
+      <button class="btn btn-outline" onclick="dlTemplate()" title="Download blank CSV template">⬇ Template</button>
+      <label class="btn btn-outline" style="cursor:pointer;margin:0" title="Upload filled template CSV">
+        ⬆ Upload CSV<input type="file" accept=".csv" style="display:none" onchange="uploadCSV(this)">
+      </label>
+      <button class="btn btn-green" onclick="exportCSV()">Export CSV</button>
+      <span style="width:1px;background:#ddd;align-self:stretch;margin:0 2px"></span>
+      <button class="btn btn-outline" style="color:#c0392b;border-color:#e8b4b0" onclick="rows=[BLANK_ROW(),BLANK_ROW(),BLANK_ROW()];saveRows();render()" title="Clear all rows and start fresh">⟳ Start Fresh</button>
+      <button class="btn btn-outline" style="color:#3d7080;border-color:#b0c0dc" onclick="loadSampleData()" title="Load sample ASINs">☰ Load Sample Data</button>
+      <button id="btn-save-sample" class="btn btn-outline" style="display:none;color:#1a6e3c;border-color:#a0d0b0" onclick="saveSampleData()" title="Save current rows as new sample data">⭳ Save as Sample Data</button>
+    </div>
+  </div>
+
+  <div id="session-banner" style="display:none;background:#eef3fb;border:1px solid #c0d0ec;border-radius:6px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#3d7080;align-items:center;gap:10px"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div id="calc" class="table-wrap">
+    <table class="ct">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ─── FEE TABLES ──────────────────────────────────────────────────────────────
+// Standard tiers: [maxOz, fee_lt10, fee_1050, fee_gt50]
+// Variable large std (3-20lb): {b:[3 fees], per:0.08, intOz:4, abOz:48}
+// Bulky/XL: {b:[3 fees], per:float, abLb:float}
+
+const T = {
+  // Non-Peak 2025 (Jan 15 – Oct 14, 2025)
+  NP25: {
+    ss: [[2,2.29,3.06,3.06],[4,2.38,3.15,3.15],[6,2.47,3.24,3.24],[8,2.56,3.33,3.33],
+         [10,2.66,3.43,3.43],[12,2.76,3.53,3.53],[14,2.83,3.60,3.60],[16,2.88,3.65,3.65]],
+    ls: [[4,2.91,3.68,3.68],[8,3.13,3.90,3.90],[12,3.38,4.15,4.15],[16,3.78,4.55,4.55],
+         [20,4.22,4.99,4.99],[24,4.60,5.37,5.37],[28,4.75,5.52,5.52],[32,5.00,5.77,5.77],
+         [36,5.10,5.87,5.87],[40,5.28,6.05,6.05],[44,5.44,6.21,6.21],[48,5.85,6.62,6.62]],
+    lsv:{b:[6.15,6.92,6.92],per:0.08,intOz:4,abOz:48},
+    sb:{b:[8.84,9.61,9.61],per:0.38,abLb:1},
+    lb:{b:[8.84,9.61,9.61],per:0.38,abLb:1},
+    xl050:{b:[25.56,26.33,26.33],per:0.38,abLb:1},
+    xl5070:{b:[39.35,40.12,40.12],per:0.75,abLb:51},
+    xl70150:{b:[54.04,54.81,54.81],per:0.75,abLb:71},
+    xl150:{b:[194.18,194.95,194.95],per:0.19,abLb:151},
+  },
+  // Non-Peak 2026+ (Starting Jan 15, 2026)
+  NP26: {
+    ss: [[2,2.43,3.32,3.58],[4,2.49,3.42,3.68],[6,2.56,3.45,3.71],[8,2.66,3.54,3.80],
+         [10,2.77,3.68,3.94],[12,2.82,3.78,4.04],[14,2.92,3.91,4.17],[16,2.95,3.96,4.22]],
+    ls: [[4,2.91,3.73,3.99],[8,3.13,3.95,4.21],[12,3.38,4.20,4.46],[16,3.78,4.60,4.86],
+         [20,4.22,5.04,5.30],[24,4.60,5.42,5.68],[28,4.75,5.57,5.83],[32,5.00,5.82,6.08],
+         [36,5.10,5.92,6.18],[40,5.28,6.10,6.36],[44,5.44,6.26,6.52],[48,5.85,6.67,6.93]],
+    lsv:{b:[6.15,6.97,7.23],per:0.08,intOz:4,abOz:48},
+    sb:{b:[6.78,7.55,7.55],per:0.38,abLb:1},
+    lb:{b:[8.58,9.35,9.35],per:0.38,abLb:1},
+    xl050:{b:[25.56,26.33,26.33],per:0.38,abLb:1},
+    xl5070:{b:[36.55,37.32,37.32],per:0.75,abLb:51},
+    xl70150:{b:[50.55,51.32,51.32],per:0.75,abLb:71},
+    xl150:{b:[194.18,194.95,194.95],per:0.19,abLb:151},
+  },
+  // Peak 2025 (Oct 15, 2025 – Jan 14, 2026)
+  PK25: {
+    ss: [[2,2.48,3.25,3.25],[4,2.57,3.34,3.34],[6,2.67,3.44,3.44],[8,2.76,3.53,3.53],
+         [10,2.87,3.64,3.64],[12,2.97,3.74,3.74],[14,3.05,3.82,3.82],[16,3.10,3.87,3.87]],
+    ls: [[4,3.15,3.92,3.92],[8,3.39,4.16,4.16],[12,3.66,4.43,4.43],[16,4.07,4.84,4.84],
+         [20,4.52,5.29,5.29],[24,4.91,5.68,5.68],[28,5.07,5.84,5.84],[32,5.33,6.10,6.10],
+         [36,5.47,6.24,6.24],[40,5.67,6.44,6.44],[44,5.84,6.61,6.61],[48,6.26,7.03,7.03]],
+    lsv:{b:[6.69,7.46,7.46],per:0.08,intOz:4,abOz:48},
+    sb:{b:[9.88,10.65,10.65],per:0.38,abLb:1},
+    lb:{b:[9.88,10.65,10.65],per:0.38,abLb:1},
+    xl050:{b:[28.29,29.06,29.06],per:0.38,abLb:1},
+    xl5070:{b:[42.16,42.93,42.93],per:0.75,abLb:51},
+    xl70150:{b:[58.46,59.23,59.23],per:0.75,abLb:71},
+    xl150:{b:[202.69,203.46,203.46],per:0.19,abLb:151},
+  },
+  // DG Non-Peak 2025
+  DG_NP25: {
+    ss: [[2,3.26,4.03,4.03],[4,3.32,4.09,4.09],[6,3.39,4.16,4.16],[8,3.45,4.22,4.22],
+         [10,3.53,4.30,4.30],[12,3.59,4.36,4.36],[14,3.64,4.41,4.41],[16,3.70,4.47,4.47]],
+    ls: [[4,3.73,4.50,4.50],[8,3.94,4.71,4.71],[12,4.17,4.94,4.94],[16,4.37,5.14,5.14],
+         [20,4.82,5.59,5.59],[24,5.20,5.97,5.97],[28,5.35,6.12,6.12],[32,5.49,6.26,6.26],
+         [36,5.56,6.33,6.33],[40,5.74,6.51,6.51],[44,5.90,6.67,6.67],[48,6.31,7.08,7.08]],
+    lsv:{b:[6.61,7.38,7.38],per:0.08,intOz:4,abOz:48},
+    sb:{b:[9.56,10.33,10.33],per:0.38,abLb:1},
+    lb:{b:[9.56,10.33,10.33],per:0.38,abLb:1},
+    xl050:{b:[27.67,28.44,28.44],per:0.38,abLb:1},
+    xl5070:{b:[42.56,43.33,43.33],per:0.75,abLb:51},
+    xl70150:{b:[61.17,61.94,61.94],per:0.75,abLb:71},
+    xl150:{b:[218.76,219.53,219.53],per:0.19,abLb:151},
+  },
+  // DG Non-Peak 2026+
+  DG_NP26: {
+    ss: [[2,3.40,4.29,4.55],[4,3.43,4.36,4.62],[6,3.48,4.37,4.63],[8,3.55,4.43,4.69],
+         [10,3.64,4.55,4.81],[12,3.65,4.61,4.87],[14,3.73,4.72,4.98],[16,3.77,4.78,5.04]],
+    ls: [[4,3.73,4.55,4.81],[8,3.94,4.76,5.02],[12,4.17,4.99,5.25],[16,4.37,5.19,5.45],
+         [20,4.82,5.64,5.90],[24,5.20,6.02,6.28],[28,5.35,6.17,6.43],[32,5.49,6.31,6.57],
+         [36,5.56,6.38,6.64],[40,5.74,6.56,6.82],[44,5.90,6.72,6.98],[48,6.31,7.13,7.39]],
+    lsv:{b:[6.61,7.43,7.69],per:0.08,intOz:4,abOz:48},
+    sb:{b:[7.50,8.27,8.27],per:0.38,abLb:1},
+    lb:{b:[9.30,10.07,10.07],per:0.38,abLb:1},
+    xl050:{b:[27.67,28.44,28.44],per:0.38,abLb:1},
+    xl5070:{b:[39.76,40.53,40.53],per:0.75,abLb:51},
+    xl70150:{b:[57.68,58.45,58.45],per:0.75,abLb:71},
+    xl150:{b:[218.76,219.53,219.53],per:0.19,abLb:151},
+  },
+  // DG Peak 2025
+  DG_PK25: {
+    ss: [[2,3.60,4.37,4.37],[4,3.69,4.46,4.46],[6,3.79,4.56,4.56],[8,3.88,4.65,4.65],
+         [10,3.99,4.76,4.76],[12,4.08,4.85,4.85],[14,4.16,4.93,4.93],[16,4.25,5.02,5.02]],
+    ls: [[4,4.32,5.09,5.09],[8,4.56,5.33,5.33],[12,4.82,5.59,5.59],[16,5.04,5.81,5.81],
+         [20,5.51,6.28,6.28],[24,5.91,6.68,6.68],[28,6.08,6.85,6.85],[32,6.24,7.01,7.01],
+         [36,6.33,7.10,7.10],[40,6.53,7.30,7.30],[44,6.70,7.47,7.47],[48,7.12,7.89,7.89]],
+    lsv:{b:[7.51,8.28,8.28],per:0.08,intOz:4,abOz:48},
+    sb:{b:[11.12,11.89,11.89],per:0.38,abLb:1},
+    lb:{b:[11.12,11.89,11.89],per:0.38,abLb:1},
+    xl050:{b:[31.71,32.48,32.48],per:0.38,abLb:1},
+    xl5070:{b:[46.66,47.43,47.43],per:0.75,abLb:51},
+    xl70150:{b:[67.53,68.30,68.30],per:0.75,abLb:71},
+    xl150:{b:[230.84,231.61,231.61],per:0.19,abLb:151},
+  },
+};
+
+// ─── INDIA FEE TABLES ────────────────────────────────────────────────────────
+// Units: kg, cm. Fee currency: INR. +18% GST on all fees.
+// Weight Handling is per SHIPMENT; Pick & Pack is per UNIT.
+const IN_T = {
+  // Standard: Pick & Pack per unit (all STEP levels identical)
+  pp_std: { base1kg: 17, per1to5kg: 5, per5kgChunk: 2 },
+
+  // Standard: Weight Handling per shipment by STEP × zone
+  wh_std: {
+    premium: {
+      reg: { s5:37,  s10:52, s20:76,  pk25:24, pk5p:13 },
+      nat: { s5:63,  s10:83, s20:120, pk25:34, pk5p:18 },
+    },
+    standard: {
+      reg: { s5:39,  s10:54, s20:78,  pk25:24, pk5p:13 },
+      nat: { s5:65,  s10:85, s20:122, pk25:34, pk5p:18 },
+    },
+    basic: {
+      reg: { s5:42,  s10:58, s20:82,  pk25:24, pk5p:13 },
+      nat: { s5:69,  s10:89, s20:126, pk25:34, pk5p:18 },
+    },
+  },
+
+  // Standard: IXD Weight Handling (flat regardless of region)
+  wh_ixd: {
+    premium:  { s5:42, s10:60, s20:93, pk25:28, pk5p:14 },
+    standard: { s5:43, s10:61, s20:94, pk25:28, pk5p:14 },
+    basic:    { s5:47, s10:65, s20:98, pk25:28, pk5p:14 },
+  },
+
+  // Heavy & Bulky: Pick & Pack per unit (all STEP same)
+  pp_hb: { base12kg: 26, per5kgAfter12: 5 },
+
+  // Heavy & Bulky: Weight Handling base fee (first 12 kg)
+  wh_hb_base: {
+    premium:  { loc:108, reg:158, nat:298 },
+    advanced: { loc:108, reg:158, nat:298 },
+    standard: { loc:110, reg:160, nat:300 },
+    basic:    { loc:114, reg:164, nat:304 },
+  },
+  // Heavy & Bulky: additional per kg beyond 12 kg
+  wh_hb_extra: {
+    k12to25: { loc:6, reg:10, nat:18 },
+    k25plus:  { loc:5, reg:6,  nat:12 },
+  },
+};
+
+function inSizeTier(actualKg, l, w, h) {
+  const maxDim = Math.max(l, w, h);
+  const [L, M, S] = [l, w, h].sort((a, b) => b - a);
+  const girth = L + 2 * (M + S);
+  if (actualKg > 22.5 || maxDim > 183 || girth > 300) return 'Heavy & Bulky';
+  return 'Standard';
+}
+
+function inShipWeight(billingKg, isHB) {
+  const packKg = isHB ? 0.5 : 0.1;
+  const raw = billingKg + packKg;
+  if (isHB) return Math.ceil(raw);           // nearest 1 kg
+  return Math.ceil(raw * 2) / 2;             // nearest 0.5 kg
+}
+
+function inPP(actualKg, isHB) {
+  if (isHB) {
+    let f = IN_T.pp_hb.base12kg;
+    if (actualKg > 12) f += Math.ceil((actualKg - 12) / 5) * IN_T.pp_hb.per5kgAfter12;
+    return f;
+  }
+  let f = IN_T.pp_std.base1kg;
+  if (actualKg > 1) f += Math.min(Math.ceil(actualKg - 1), 4) * IN_T.pp_std.per1to5kg;
+  if (actualKg > 5) f += Math.ceil((actualKg - 5) / 5) * IN_T.pp_std.per5kgChunk;
+  return f;
+}
+
+function inWHCalc(r, shipKg) {
+  if (shipKg <= 0.5) return r.s5;
+  if (shipKg <= 1.0) return r.s10;
+  if (shipKg <= 2.0) return r.s20;
+  const above2 = shipKg - 2;
+  const to5 = Math.min(above2, 3);
+  let f = r.s20 + to5 * r.pk25;
+  if (above2 > 3) f += (above2 - 3) * r.pk5p;
+  return f;
+}
+
+function inWH(shipKg, isHB, step) {
+  const s = (step === 'premium') ? 'premium' : step;
+  if (isHB) {
+    const base = IN_T.wh_hb_base[s] || IN_T.wh_hb_base.standard;
+    const ex = IN_T.wh_hb_extra;
+    const hbCalc = zone => {
+      let f = base[zone];
+      if (shipKg > 12) {
+        const ab12 = shipKg - 12;
+        const to25 = Math.min(ab12, 13);
+        f += to25 * ex.k12to25[zone];
+        if (ab12 > 13) f += (ab12 - 13) * ex.k25plus[zone];
+      }
+      return f;
+    };
+    return { loc: hbCalc('loc'), reg: hbCalc('reg'), nat: hbCalc('nat') };
+  }
+  const tbl = IN_T.wh_std[s] || IN_T.wh_std.standard;
+  return { reg: inWHCalc(tbl.reg, shipKg), nat: inWHCalc(tbl.nat, shipKg) };
+}
+
+function computeIndia(row) {
+  const actualKg = parseFloat(row.w);
+  const l = parseFloat(row.l), w = parseFloat(row.wd), h = parseFloat(row.h);
+  if (isNaN(actualKg) || isNaN(l) || isNaN(w) || isNaN(h)) return null;
+  const volKg = (l * w * h) / 5000;
+  const billingKg = Math.max(actualKg, volKg);
+  const tier = inSizeTier(actualKg, l, w, h);
+  const isHB = tier === 'Heavy & Bulky';
+  const shipKg = inShipWeight(billingKg, isHB);
+  const step = (document.getElementById('stepLevel') || {value:'standard'}).value;
+  const ppFee = inPP(actualKg, isHB);
+  const wh = inWH(shipKg, isHB, step);
+  const GST = 0.18;
+  const totReg = ppFee + wh.reg;
+  const totNat = ppFee + wh.nat;
+  const totLoc = isHB ? ppFee + wh.loc : null;
+  return {
+    actualKg, volKg, billingKg, shipKg, tier, isHB, ppFee,
+    whReg: wh.reg, whNat: wh.nat, whLoc: wh.loc || null,
+    totReg, totNat, totLoc,
+    totRegGST: +(totReg * (1 + GST)).toFixed(2),
+    totNatGST: +(totNat * (1 + GST)).toFixed(2),
+    totLocGST: isHB ? +(totLoc * (1 + GST)).toFixed(2) : null,
+  };
+}
+
+// ─── ASIN DATA ────────────────────────────────────────────
+const BLANK_ROW = () => ({asin:'',w:'',l:'',wd:'',h:'',price:''});
+
+let _sessionSource = 'blank'; // 'saved' | 'blank'
+
+function loadRows() {
+  try {
+    const saved = localStorage.getItem('fba_rows');
+    if (saved) {
+      const r = JSON.parse(saved);
+      if (r && r.length) { _sessionSource = 'saved'; return r; }
+    }
+  } catch(e) {}
+  _sessionSource = 'blank';
+  return [BLANK_ROW(), BLANK_ROW(), BLANK_ROW()];
+}
+function saveRows() {
+  try { localStorage.setItem('fba_rows', JSON.stringify(rows)); } catch(e) {}
+}
+function showBanner() {
+  const el = document.getElementById('session-banner');
+  if (!el) return;
+  if (_sessionSource === 'saved') {
+    const filled = rows.filter(r => r.asin).length;
+    el.style.display = 'flex';
+    el.innerHTML = `<span>📂 Restored <strong>${filled} ASIN${filled===1?'':'s'}</strong> from last session.</span>
+      <button class="btn btn-outline" style="font-size:11px;padding:3px 8px;color:#c0392b;border-color:#e8b4b0;margin-left:auto"
+        onclick="rows=[BLANK_ROW(),BLANK_ROW(),BLANK_ROW()];saveRows();_sessionSource='blank';showBanner();render()">⟳ Start Fresh</button>
+      <button class="btn btn-outline" style="font-size:11px;padding:3px 8px;color:#3d7080;border-color:#b0c0dc"
+        onclick="document.getElementById('session-banner').style.display='none'">✕</button>`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function loadSampleData() {
+  try {
+    const custom = localStorage.getItem('fba_sample');
+    if (custom) { const r = JSON.parse(custom); if (r && r.length) { rows = r; saveRows(); render(); document.getElementById('btn-save-sample').style.display=''; return; } }
+  } catch(e) {}
+  alert('No sample data saved yet.\n\nUse "Save as Sample Data" to save your current rows as sample, or "Import Sample" to load from a backup file.');
+}
+function saveSampleData() {
+  try {
+    localStorage.setItem('fba_sample', JSON.stringify(rows));
+    // Also download a backup file so it can be restored on other devices
+    const blob = new Blob([JSON.stringify(rows, null, 2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'fba_sample_data.json'; a.click(); URL.revokeObjectURL(a.href);
+    const btn = document.getElementById('btn-save-sample');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Saved + Downloaded!'; btn.disabled = true;
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+  } catch(e) { alert('Could not save: ' + e.message); }
+}
+function importSampleData(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const r = JSON.parse(e.target.result);
+      if (!r || !r.length) { alert('Invalid sample file'); return; }
+      localStorage.setItem('fba_sample', JSON.stringify(r));
+      rows = r; saveRows(); render();
+      document.getElementById('btn-save-sample').style.display = '';
+      alert('Sample data imported — ' + r.filter(x=>x.asin).length + ' ASINs loaded.');
+    } catch(err) { alert('Could not parse file: ' + err.message); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+let rows = loadRows();
+
+// ─── CALC ENGINE ─────────────────────────────────────────────────────────────
+function parseW(s) {
+  if (!s && s !== 0) return null;
+  const str = String(s).trim().toLowerCase();
+  if (!str || str === 'nan') return null;
+  if (str.endsWith('oz')) { const v = parseFloat(str); return isNaN(v) ? null : v / 16; }
+  const v = parseFloat(str);
+  return isNaN(v) ? null : v;
+}
+
+function sortDims(l, w, h) {
+  const d = [l, w, h].sort((a, b) => b - a); // largest first
+  return d; // [longest, median, shortest]
+}
+
+function dimW(l, w, h) { return (l * w * h) / 139; }
+
+function getSizeTier(unitLbs, dims) {
+  const [L, M, S] = dims;
+  const dw = dimW(L, M, S);
+  const sw = Math.max(unitLbs, dw);
+  const swOz = sw * 16;
+  const girth = 2 * (M + S);
+  const lpg = L + girth;
+
+  // Small standard: shipping weight ≤16oz, L≤15, M≤12, S≤0.75
+  if (swOz <= 16 && L <= 15 && M <= 12 && S <= 0.75) return 'Small Standard';
+  // Large standard: ship weight ≤20lb, L≤18, M≤14, S≤8
+  if (sw <= 20 && L <= 18 && M <= 14 && S <= 8) return 'Large Standard';
+  // Small Bulky: ≤50lb, L≤37, M≤28, S≤20, L+G≤130
+  if (sw <= 50 && L <= 37 && M <= 28 && S <= 20 && lpg <= 130) return 'Small Bulky';
+  // Large Bulky: ≤50lb, L≤59, M≤33, S≤33, L+G≤130
+  if (sw <= 50 && L <= 59 && M <= 33 && S <= 33 && lpg <= 130) return 'Large Bulky';
+  if (sw <= 50) return 'Extra-Large 0–50lb';
+  if (sw <= 70) return 'Extra-Large 50–70lb';
+  if (sw <= 150) return 'Extra-Large 70–150lb';
+  return 'Extra-Large 150+lb';
+}
+
+function feeW(tier, unitLbs, dims) {
+  // Small Standard & XL 150+: use unit weight for fee lookup
+  if (tier === 'Small Standard' || tier === 'Extra-Large 150+lb') return unitLbs;
+  return Math.max(unitLbs, dimW(...dims));
+}
+
+function priceBand(price) {
+  if (price < 10) return 0;
+  if (price <= 50) return 1;
+  return 2;
+}
+
+function lookupStd(tbl, wOz, pb) {
+  for (const row of tbl) {
+    if (wOz <= row[0]) return row[1 + pb];
+  }
+  return null;
+}
+
+function calcFee(tier, fwLbs, pb, tblSet) {
+  const fwOz = fwLbs * 16;
+  if (tier === 'Small Standard') return lookupStd(tblSet.ss, fwOz, pb);
+  if (tier === 'Large Standard') {
+    const r = lookupStd(tblSet.ls, fwOz, pb);
+    if (r !== null) return r;
+    // variable: 3–20lb
+    const v = tblSet.lsv;
+    const intervals = Math.ceil((fwOz - v.abOz) / v.intOz);
+    return +(v.b[pb] + intervals * v.per).toFixed(2);
+  }
+  const spec = {
+    'Small Bulky': tblSet.sb,
+    'Large Bulky': tblSet.lb,
+    'Extra-Large 0–50lb': tblSet.xl050,
+    'Extra-Large 50–70lb': tblSet.xl5070,
+    'Extra-Large 70–150lb': tblSet.xl70150,
+    'Extra-Large 150+lb': tblSet.xl150,
+  }[tier];
+  if (!spec) return null;
+  const lbsAbove = Math.max(0, fwLbs - spec.abLb);
+  return +(spec.b[pb] + Math.ceil(lbsAbove) * spec.per).toFixed(2);
+}
+
+function compute(row, defPrice) {
+  const unitLbs = parseW(row.w);
+  const l = parseFloat(row.l), w = parseFloat(row.wd), h = parseFloat(row.h);
+  if (unitLbs === null || isNaN(l) || isNaN(w) || isNaN(h)) return null;
+  const dims = sortDims(l, w, h);
+  const dw = dimW(...dims);
+  const sw = Math.max(unitLbs, dw);
+  const tier = getSizeTier(unitLbs, dims);
+  const fw = feeW(tier, unitLbs, dims);
+
+  const pbLockEl = document.getElementById('pbLock');
+  const pbLock = pbLockEl ? pbLockEl.value : 'auto';
+  const price = parseFloat(row.price) || defPrice;
+  const pb = pbLock === 'auto' ? priceBand(price) : parseInt(pbLock);
+
+  return {
+    unitLbs, dims, dw, sw, fw, tier,
+    np25:   calcFee(tier, fw, pb, T.NP25),
+    np26:   calcFee(tier, fw, pb, T.NP26),
+    pk25:   calcFee(tier, fw, pb, T.PK25),
+    dgnp25: calcFee(tier, fw, pb, T.DG_NP25),
+    dgnp26: calcFee(tier, fw, pb, T.DG_NP26),
+    dgpk25: calcFee(tier, fw, pb, T.DG_PK25),
+  };
+}
+
+// ─── SUGGESTIONS ─────────────────────────────────────────────────────────────
+function getSuggestion(c, defPrice, row) {
+  const tier = c.tier;
+  const [L, M, S] = c.dims;
+  const sw = c.sw;
+  const fw = c.fw;
+  const fwOz = fw * 16;
+  const swOz = sw * 16;
+  const price = parseFloat(row.price) || defPrice;
+  const pb = priceBand(price);
+  const curFee = c.np25;
+  if (curFee === null) return '—';
+
+  const tips = [];
+
+  // ── Tier-drop checks ──
+  if (tier === 'Large Standard') {
+    const blocks = [];
+    if (swOz > 16) blocks.push(`weight ${(swOz-16).toFixed(1)}oz over 16oz`);
+    if (L > 15)   blocks.push(`longest ${(L-15).toFixed(2)}" over 15"`);
+    if (M > 12)   blocks.push(`median ${(M-12).toFixed(2)}" over 12"`);
+    if (S > 0.75) blocks.push(`shortest ${(S-0.75).toFixed(2)}" over 0.75"`);
+    if (blocks.length <= 2) {
+      const ssFw = Math.min(fw, 1);
+      const ssFee = calcFee('Small Standard', ssFw, pb, T.NP25);
+      if (ssFee !== null && ssFee < curFee)
+        tips.push(`<span style="color:#155724;font-weight:600">↓ Small Std saves $${(curFee-ssFee).toFixed(2)}/unit:</span> ${blocks.join('; ')}`);
+    }
+  }
+
+  if (tier === 'Small Bulky' || tier === 'Large Bulky') {
+    const blocks = [];
+    if (sw > 20) blocks.push(`weight ${(sw-20).toFixed(2)}lb over 20lb`);
+    if (L > 18)  blocks.push(`longest ${(L-18).toFixed(2)}" over 18"`);
+    if (M > 14)  blocks.push(`median ${(M-14).toFixed(2)}" over 14"`);
+    if (S > 8)   blocks.push(`shortest ${(S-8).toFixed(2)}" over 8"`);
+    if (blocks.length <= 2) {
+      const lsFw = Math.min(fw, 20);
+      const lsFee = calcFee('Large Standard', lsFw, pb, T.NP25);
+      if (lsFee !== null && lsFee < curFee)
+        tips.push(`<span style="color:#155724;font-weight:600">↓ Large Std saves $${(curFee-lsFee).toFixed(2)}/unit:</span> ${blocks.join('; ')}`);
+    }
+  }
+
+  if (tier === 'Large Bulky') {
+    const blocks = [];
+    if (L > 37) blocks.push(`longest ${(L-37).toFixed(2)}" over 37"`);
+    if (M > 28) blocks.push(`median ${(M-28).toFixed(2)}" over 28"`);
+    if (S > 20) blocks.push(`shortest ${(S-20).toFixed(2)}" over 20"`);
+    const girth = 2*(M+S); const lpg = L+girth;
+    if (lpg > 130) blocks.push(`L+girth ${(lpg-130).toFixed(1)}" over 130"`);
+    if (blocks.length <= 2) {
+      const sbFee = calcFee('Small Bulky', fw, pb, T.NP25);
+      if (sbFee !== null && sbFee < curFee)
+        tips.push(`<span style="color:#155724;font-weight:600">↓ Small Bulky saves $${(curFee-sbFee).toFixed(2)}/unit:</span> ${blocks.join('; ')}`);
+    }
+  }
+
+  // ── Weight band drop within same tier ──
+  if (tier === 'Small Standard' || tier === 'Large Standard') {
+    const tbl = tier === 'Small Standard' ? T.NP25.ss : T.NP25.ls;
+    for (let i = 1; i < tbl.length; i++) {
+      if (fwOz <= tbl[i][0] && fwOz > tbl[i-1][0]) {
+        const saving = tbl[i][1+pb] - tbl[i-1][1+pb];
+        if (saving >= 0.05) {
+          const targetOz = tbl[i-1][0];
+          const targetStr = targetOz < 16 ? `${targetOz}oz` : `${(targetOz/16).toFixed(2)}lb`;
+          tips.push(`Cut ship weight to ≤${targetStr} → saves $${saving.toFixed(2)}/unit`);
+        }
+        break;
+      }
+    }
+    // Variable band (3-20lb large std)
+    if (tier === 'Large Standard' && fwOz > 48) {
+      const v = T.NP25.lsv;
+      const intervals = Math.ceil((fwOz - v.abOz) / v.intOz);
+      if (intervals > 0) {
+        const targetOz = v.abOz + (intervals - 1) * v.intOz;
+        tips.push(`Cut ship weight to ≤${(targetOz/16).toFixed(3)}lb → saves $${v.per.toFixed(2)}/unit`);
+      }
+    }
+  }
+
+  if (tips.length === 0) return '<span style="color:#999">Optimal for tier</span>';
+  return tips.slice(0, 2).join('<br>');
+}
+
+// ─── TEMPLATE DOWNLOAD ────────────────────────────────────────────────────────
+function dlTemplate() {
+  const isIN = getCountry() === 'IN';
+  const csv = isIN
+    ? 'ASIN,Weight (kg),Dims L (cm),Dims W (cm),Dims H (cm),Price (INR)\nB0XXXXXXXXX,0.25,15,10,5,499\n'
+    : 'ASIN,Weight (lbs),Dims (L),Dims (W),Dims (H),Price\nB0XXXXXXXXX,0.5,6,4,2,14.99\n';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = isIN ? 'FBA_India_Template.csv' : 'FBA_Template.csv'; a.click();
+}
+
+// ─── CSV UPLOAD ───────────────────────────────────────────────────────────────
+function uploadCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.trim().split('\n');
+    if (lines.length < 2) { alert('CSV empty or header only'); return; }
+    // Detect header columns
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+    const idx = {
+      asin:   headers.findIndex(h => h==='asin'),
+      w:      headers.findIndex(h => h.includes('weight')),
+      l:      headers.findIndex(h => h==='dimsl' || h==='l' || h==='dimsl' || h.includes('dimsl') || h==='length'),
+      wd:     headers.findIndex(h => h==='dimsw' || h==='w' || h.includes('dimsw') || h==='width'),
+      h:      headers.findIndex(h => h==='dimsh' || h==='h' || h.includes('dimsh') || h==='height'),
+      price:  headers.findIndex(h => h==='price'),
+    };
+    // Fallback positional (ASIN,Weight,L,W,H,Price)
+    if (idx.asin<0) idx.asin=0;
+    if (idx.w<0)    idx.w=1;
+    if (idx.l<0)    idx.l=2;
+    if (idx.wd<0)   idx.wd=3;
+    if (idx.h<0)    idx.h=4;
+    if (idx.price<0) idx.price=5;
+
+    const newRows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim());
+      if (!cols[idx.asin]) continue;
+      newRows.push({
+        asin:  cols[idx.asin] || '',
+        w:     cols[idx.w]    || '',
+        l:     cols[idx.l]    || null,
+        wd:    cols[idx.wd]   || null,
+        h:     cols[idx.h]    || null,
+        price: cols[idx.price]|| '',
+      });
+    }
+    if (newRows.length === 0) { alert('No data rows found'); return; }
+    rows = newRows;
+    render();
+    saveRows();
+    input.value = ''; // reset so same file can be re-uploaded
+  };
+  reader.readAsText(file);
+}
+
+// ─── COUNTRY SWITCH ──────────────────────────────────────────
+function getCountry() { return (document.getElementById('country')||{value:'US'}).value; }
+
+function switchCountry() {
+  const c = getCountry();
+  const isIN = c === 'IN';
+  document.getElementById('stepDiv').style.display = isIN ? '' : 'none';
+  document.getElementById('pbDiv').style.display   = isIN ? 'none' : '';
+  document.querySelectorAll('.cur-sym').forEach(el => el.textContent = isIN ? '₹' : '$');
+  document.querySelector('#sidebar .brand p').textContent = isIN ? 'Amazon India · FBA Fees' : 'Amazon US · 2025–2026';
+  // update sidebar legend
+  const leg = document.querySelector('.legend');
+  if (leg) {
+    leg.innerHTML = isIN ? `
+      <h4>Zones</h4>
+      <div class="leg-row"><div class="leg-dot" style="background:#2d8a5a"></div><span class="leg-lbl">Regional (intra-region)</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#2d5a9a"></div><span class="leg-lbl">National (cross-region)</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#9a5a1a"></div><span class="leg-lbl">Local / H&amp;B only</span></div>
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px">
+        <div class="leg-row"><div class="leg-dot" style="background:#cce5ff;border:1px solid #004085"></div><span class="leg-lbl">Standard</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#f8d7da;border:1px solid #721c24"></div><span class="leg-lbl">Heavy &amp; Bulky</span></div>
+        <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.4);line-height:1.5">Dims in cm · Weight in kg<br>Vol wt = L×W×H ÷ 5000<br>+18% GST on all fees</div>
+      </div>` : `
+      <h4>Fee Periods</h4>
+      <div class="leg-row"><div class="leg-dot" style="background:#2f5c6b"></div><span class="leg-lbl">Non-Peak 2025 (Jan–Oct)</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#4a6fa5"></div><span class="leg-lbl">Non-Peak 2026+ (Jan+)</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#1a6e3c"></div><span class="leg-lbl">Peak 2025 (Oct–Jan)</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#7b3f00"></div><span class="leg-lbl">DG Non-Peak 2025</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#8b5e00"></div><span class="leg-lbl">DG Non-Peak 2026+</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:#7b1a1a"></div><span class="leg-lbl">DG Peak 2025</span></div>
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px">
+        <div class="leg-row"><div class="leg-dot" style="background:#d4edda;border:1px solid #155724"></div><span class="leg-lbl">Small Standard</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#cce5ff;border:1px solid #004085"></div><span class="leg-lbl">Large Standard</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#fff3cd;border:1px solid #856404"></div><span class="leg-lbl">Small/Large Bulky</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#f8d7da;border:1px solid #721c24"></div><span class="leg-lbl">Extra-Large</span></div>
+      </div>`;
+  }
+  // clear rows on switch so US lbs/in don't get interpreted as kg/cm
+  rows = [BLANK_ROW(), BLANK_ROW(), BLANK_ROW()];
+  saveRows();
+  render();
+}
+
+function renderUSHeader() {
+  document.getElementById('thead').innerHTML = `
+    <tr>
+      <th rowspan="2">#</th>
+      <th rowspan="2">ASIN</th>
+      <th rowspan="2">Weight (lbs)</th>
+      <th rowspan="2">L × W × H (in)</th>
+      <th rowspan="2">Dim Wt</th>
+      <th rowspan="2">Ship Wt</th>
+      <th rowspan="2">Size Tier</th>
+      <th rowspan="2">Price ($)</th>
+      <th colspan="2" class="np" style="text-align:center">Non-Peak (Std)</th>
+      <th class="pk" style="text-align:center">Peak (Std)</th>
+      <th colspan="2" class="dgnp" style="text-align:center">DG Non-Peak</th>
+      <th class="dgpk" style="text-align:center">DG Peak</th>
+      <th rowspan="2" style="background:#4a4a6a;min-width:180px">Fee Reduction Tip</th>
+      <th rowspan="2" class="act">Del</th>
+    </tr>
+    <tr>
+      <th class="np">2025</th>
+      <th class="np" style="background:#3a5a9a">2026+</th>
+      <th class="pk">Oct–Jan</th>
+      <th class="dgnp">2025</th>
+      <th class="dgnp" style="background:#8b5e00">2026+</th>
+      <th class="dgpk">Oct–Jan</th>
+    </tr>`;
+}
+
+function renderINHeader() {
+  document.getElementById('thead').innerHTML = `
+    <tr>
+      <th rowspan="2">#</th>
+      <th rowspan="2">ASIN</th>
+      <th rowspan="2">Weight (kg)</th>
+      <th rowspan="2">L × W × H (cm)</th>
+      <th rowspan="2">Vol Wt (kg)</th>
+      <th rowspan="2">Ship Wt (kg)</th>
+      <th rowspan="2">Size Tier</th>
+      <th rowspan="2">Price (₹)</th>
+      <th rowspan="2" style="background:#5b3fa5;color:#fff">P&amp;P (₹)</th>
+      <th colspan="2" style="background:#1a6e3c;color:#fff;text-align:center">Regional Zone</th>
+      <th colspan="2" style="background:#1a4a8a;color:#fff;text-align:center">National Zone</th>
+      <th colspan="2" style="background:#7b3f00;color:#fff;text-align:center">Local Zone (H&amp;B)</th>
+      <th rowspan="2" style="background:#4a4a6a;color:#fff;min-width:160px">Note</th>
+      <th rowspan="2" class="act">Del</th>
+    </tr>
+    <tr>
+      <th style="background:#2d8a5a;color:#fff">WH (₹)</th>
+      <th style="background:#1e7a4a;color:#fff">Total+GST (₹)</th>
+      <th style="background:#2d5a9a;color:#fff">WH (₹)</th>
+      <th style="background:#1e4a8a;color:#fff">Total+GST (₹)</th>
+      <th style="background:#9a5a1a;color:#fff">WH (₹)</th>
+      <th style="background:#8a4a0a;color:#fff">Total+GST (₹)</th>
+    </tr>`;
+}
+
+function inFeeCell(v) {
+  if (v === null || v === undefined) return '<td class="miss">—</td>';
+  const cls = v >= 300 ? 'fee-hi' : v >= 100 ? 'fee-md' : 'fee-lo';
+  return `<td class="fee ${cls}">₹${v.toFixed(0)}</td>`;
+}
+
+function renderIndia() {
+  renderINHeader();
+  const tbody = document.getElementById('tbody');
+  let html = '';
+  let validCount = 0, totReg = 0, totNat = 0, tierCounts = {};
+
+  rows.forEach((row, i) => {
+    const c = computeIndia(row);
+    if (c) {
+      validCount++;
+      totReg += c.totRegGST;
+      totNat += c.totNatGST;
+      tierCounts[c.tier] = (tierCounts[c.tier] || 0) + 1;
+    }
+    const tierBadge = c
+      ? `<span class="tier ${c.isHB ? 't-xl' : 't-ls'}">${c.tier}</span>`
+      : '<span class="tier t-uk">No data</span>';
+    const volStr  = c ? c.volKg.toFixed(3)+' kg' : '—';
+    const shipStr = c ? c.shipKg.toFixed(1)+' kg' : '—';
+    const note = c ? (c.isHB ? 'H&amp;B: WH is per shipment; Local zone applies.' : 'WH fee is per shipment (1-unit basis). +18% GST included in Total.') : '<span class="miss">—</span>';
+
+    html += `<tr>
+      <td style="color:#999;font-size:10.5px">${i+1}</td>
+      <td><input class="asin-in" value="${row.asin}" onchange="rows[${i}].asin=this.value;render()"></td>
+      <td><input class="dim-in" style="width:70px" value="${row.w}" onchange="rows[${i}].w=this.value;render()" placeholder="e.g. 0.5"></td>
+      <td>
+        <input class="dim-in" value="${row.l||''}" onchange="rows[${i}].l=this.value;render()" placeholder="L">
+        <span class="dim-lbl"> × </span>
+        <input class="dim-in" value="${row.wd||''}" onchange="rows[${i}].wd=this.value;render()" placeholder="W">
+        <span class="dim-lbl"> × </span>
+        <input class="dim-in" value="${row.h||''}" onchange="rows[${i}].h=this.value;render()" placeholder="H">
+      </td>
+      <td style="color:#888;font-size:11px">${volStr}</td>
+      <td style="color:#888;font-size:11px">${shipStr}</td>
+      <td>${tierBadge}</td>
+      <td><span style="color:#888;font-size:10px">₹</span><input class="p-in" value="${row.price}" placeholder="—" onchange="rows[${i}].price=this.value;render()"></td>
+      ${c ? `<td class="fee" style="color:#5b3fa5">₹${c.ppFee}</td>${inFeeCell(c.whReg)}${inFeeCell(c.totRegGST)}${inFeeCell(c.whNat)}${inFeeCell(c.totNatGST)}${inFeeCell(c.whLoc)}${inFeeCell(c.totLocGST)}`
+           : '<td colspan="7" class="miss" style="text-align:center">Missing weight or dimensions</td>'}
+      <td style="max-width:200px;white-space:normal;font-size:10.5px;line-height:1.5;color:#555">${note}</td>
+      <td><button class="btn-del" onclick="rows.splice(${i},1);render()">✕</button></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+
+  const tierList = Object.entries(tierCounts).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${n}× ${t}`).join(' &nbsp;|&nbsp; ');
+  document.getElementById('cards').innerHTML = `
+    <div class="card np"><div class="val">₹${(totReg/validCount||0).toFixed(0)}</div><div class="lbl">Avg Total (Regional, incl GST)</div></div>
+    <div class="card peak"><div class="val">₹${(totNat/validCount||0).toFixed(0)}</div><div class="lbl">Avg Total (National, incl GST)</div></div>
+    <div class="card"><div class="val">${validCount} / ${rows.length}</div><div class="lbl">ASINs with complete data</div></div>
+    <div class="card" style="min-width:100%;flex-basis:100%"><div style="font-size:11px;color:#666;line-height:1.8"><strong style="color:#3d7080">Size Tier Breakdown:</strong> &nbsp;${tierList || 'None'} &nbsp;|&nbsp; <span style="color:#888">WH fee is per shipment · 18% GST included in Total columns</span></div></div>
+  `;
+  saveRows();
+}
+
+// ─── RENDERING ───────────────────────────────────────────────────────────────
+function tierBadge(t) {
+  const map = {
+    'Small Standard':'t-ss','Large Standard':'t-ls',
+    'Small Bulky':'t-sb','Large Bulky':'t-lb',
+  };
+  const cls = map[t] || 't-xl';
+  return `<span class="tier ${cls}">${t}</span>`;
+}
+
+function feeCell(v) {
+  if (v === null) return '<td class="miss">—</td>';
+  const cls = v >= 6 ? 'fee-hi' : v >= 4 ? 'fee-md' : 'fee-lo';
+  return `<td class="fee ${cls}">$${v.toFixed(2)}</td>`;
+}
+
+function render() {
+  if (getCountry() === 'IN') { renderIndia(); return; }
+  renderUSHeader();
+  const defPrice = parseFloat(document.getElementById('defPrice').value) || 15;
+  const tbody = document.getElementById('tbody');
+  let html = '';
+
+  let validCount = 0, totalNP25 = 0, totalPK25 = 0, totalDGNP25 = 0, tierCounts = {};
+
+  rows.forEach((row, i) => {
+    const c = compute(row, defPrice);
+    const price = parseFloat(row.price) || defPrice;
+
+    if (c) {
+      validCount++;
+      totalNP25 += c.np25 || 0;
+      totalPK25 += c.pk25 || 0;
+      totalDGNP25 += c.dgnp25 || 0;
+      tierCounts[c.tier] = (tierCounts[c.tier] || 0) + 1;
+    }
+
+    const dimStr = (row.l && row.wd && row.h)
+      ? `${row.l} × ${row.wd} × ${row.h}`
+      : '<span class="miss">missing</span>';
+    const unitStr = c ? c.unitLbs.toFixed(3) + ' lb' : '<span class="miss">missing</span>';
+    const dwStr = c ? c.dw.toFixed(3) + ' lb' : '—';
+    const swStr = c ? c.sw.toFixed(3) + ' lb' : '—';
+
+    html += `<tr>
+      <td style="color:#999;font-size:10.5px">${i+1}</td>
+      <td><input class="asin-in" value="${row.asin}" onchange="rows[${i}].asin=this.value;render()"></td>
+      <td><input class="dim-in" style="width:70px" value="${row.w}" onchange="rows[${i}].w=this.value;render()" placeholder="e.g. 0.5 or 2oz"></td>
+      <td>
+        <input class="dim-in" value="${row.l||''}" onchange="rows[${i}].l=this.value;render()" placeholder="L">
+        <span class="dim-lbl"> × </span>
+        <input class="dim-in" value="${row.wd||''}" onchange="rows[${i}].wd=this.value;render()" placeholder="W">
+        <span class="dim-lbl"> × </span>
+        <input class="dim-in" value="${row.h||''}" onchange="rows[${i}].h=this.value;render()" placeholder="H">
+      </td>
+      <td style="color:#888;font-size:11px">${c ? c.dw.toFixed(3)+' lb' : '<span class="miss">—</span>'}</td>
+      <td style="color:#888;font-size:11px">${c ? c.sw.toFixed(3)+' lb' : '<span class="miss">—</span>'}</td>
+      <td>${c ? tierBadge(c.tier) : '<span class="tier t-uk">No data</span>'}</td>
+      <td><span style="color:#888;font-size:10px">$</span><input class="p-in" value="${row.price}" placeholder="${defPrice}" onchange="rows[${i}].price=this.value;render()"></td>
+      ${c ? feeCell(c.np25)+feeCell(c.np26)+feeCell(c.pk25)+feeCell(c.dgnp25)+feeCell(c.dgnp26)+feeCell(c.dgpk25) : '<td colspan="6" class="miss" style="text-align:center">Missing dimensions or weight</td>'}
+      <td style="max-width:220px;white-space:normal;font-size:10.5px;line-height:1.5;color:#555">${c ? getSuggestion(c, defPrice, row) : '<span class="miss">—</span>'}</td>
+      <td><button class="btn-del" onclick="rows.splice(${i},1);render()">✕</button></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+
+  // Summary cards
+  const tierList = Object.entries(tierCounts).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${n}× ${t}`).join(' &nbsp;|&nbsp; ');
+  document.getElementById('cards').innerHTML = `
+    <div class="card np"><div class="val">$${(totalNP25/validCount||0).toFixed(2)}</div><div class="lbl">Avg Non-Peak Fee (2025)</div></div>
+    <div class="card peak"><div class="val">$${(totalPK25/validCount||0).toFixed(2)}</div><div class="lbl">Avg Peak Fee (2025)</div></div>
+    <div class="card dg"><div class="val">$${(totalDGNP25/validCount||0).toFixed(2)}</div><div class="lbl">Avg DG Non-Peak Fee (2025)</div></div>
+    <div class="card"><div class="val">${validCount} / ${rows.length}</div><div class="lbl">ASINs with complete data</div></div>
+    <div class="card" style="min-width:100%;flex-basis:100%"><div style="font-size:11px;color:#666;line-height:1.8"><strong style="color:#3d7080">Size Tier Breakdown:</strong> &nbsp;${tierList || 'None'}</div></div>
+  `;
+  saveRows();
+}
+
+function addRow() {
+  rows.push({asin:'', w:'', l:'', wd:'', h:'', price:''});
+  render();
+  // scroll to bottom
+  setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
+}
+
+function exportCSV() {
+  const isIN = getCountry() === 'IN';
+  if (isIN) {
+    const headers = ['#','ASIN','Weight(kg)','L(cm)','W(cm)','H(cm)','VolWeight(kg)','ShipWeight(kg)','SizeTier','Price(INR)','PP_Fee','WH_Regional','Total_Regional_GST','WH_National','Total_National_GST','WH_Local(HB)','Total_Local_GST(HB)'];
+    const csvRows = [headers.join(',')];
+    rows.forEach((row, i) => {
+      const c = computeIndia(row);
+      csvRows.push([
+        i+1, row.asin, row.w, row.l||'', row.wd||'', row.h||'',
+        c ? c.volKg.toFixed(4) : '', c ? c.shipKg : '',
+        c ? c.tier : 'Missing', row.price||'',
+        c ? c.ppFee : '', c ? c.whReg : '', c ? c.totRegGST : '',
+        c ? c.whNat : '', c ? c.totNatGST : '',
+        c ? (c.whLoc||'') : '', c ? (c.totLocGST||'') : '',
+      ].join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'FBA_India_Fees.csv'; a.click();
+    return;
+  }
+  const defPrice = parseFloat(document.getElementById('defPrice').value) || 15;
+  const headers = ['#','ASIN','Weight(lbs)','L','W','H','DimWeight','ShipWeight','SizeTier','Price','NP2025','NP2026','Peak2025','DG_NP2025','DG_NP2026','DG_Peak2025','FeeReductionTip'];
+  const csvRows = [headers.join(',')];
+  rows.forEach((row, i) => {
+    const c = compute(row, defPrice);
+    const price = parseFloat(row.price) || defPrice;
+    const tip = c ? getSuggestion(c, defPrice, row).replace(/<[^>]*>/g,'').replace(/,/g,';') : '';
+    csvRows.push([
+      i+1, row.asin, row.w, row.l||'', row.wd||'', row.h||'',
+      c ? c.dw.toFixed(4) : '', c ? c.sw.toFixed(4) : '',
+      c ? c.tier : 'Missing', price,
+      c ? c.np25 : '', c ? c.np26 : '', c ? c.pk25 : '',
+      c ? c.dgnp25 : '', c ? c.dgnp26 : '', c ? c.dgpk25 : '',
+      `"${tip}"`
+    ].join(','));
+  });
+  const blob = new Blob([csvRows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'FBA_Fees.csv'; a.click();
+}
+
+let _eggClicks = 0, _eggTimer;
+function eggClick() {
+  _eggClicks++;
+  clearTimeout(_eggTimer);
+  _eggTimer = setTimeout(() => { _eggClicks = 0; }, 1000);
+  if (_eggClicks >= 5) {
+    _eggClicks = 0;
+    const el = document.createElement('div');
+    el.innerHTML = `<div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="this.remove()">
+      <div style="background:#fff;border-radius:16px;padding:40px 50px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);max-width:340px">
+        <div style="font-size:48px;margin-bottom:12px">🧠</div>
+        <div style="font-size:22px;font-weight:700;color:#3d7080;margin-bottom:8px">Built by Prateek</div>
+        <div style="font-size:13px;color:#666;line-height:1.6">You found the Easter egg!<br>This tool was crafted with ❤️</div>
+        <div style="margin-top:20px;font-size:11px;color:#aaa">click anywhere to close</div>
+      </div>
+    </div>`;
+    document.body.appendChild(el.firstElementChild);
+  }
+}
+
+renderUSHeader();
+render();
+showBanner();
+</script>
+</body>
+</html>
