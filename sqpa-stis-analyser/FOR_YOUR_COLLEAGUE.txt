@@ -1,0 +1,105 @@
+========================================
+  Growisto — Organic Tracker: Handover Note
+========================================
+
+This folder contains everything you need to run and modify
+the Keyword-Level Organic Tracker.
+
+
+FILES IN THIS FOLDER
+--------------------
+  app.py            — The full application (single Python file, no dependencies
+                      on any other Growisto files)
+  requirements.txt  — Python packages needed (streamlit, pandas, numpy)
+  HOW_TO_RUN.txt    — Step-by-step setup and run instructions
+  CHAT_HISTORY.txt  — Full conversation log of how this was built (see below)
+  FOR_YOUR_COLLEAGUE.txt — This file
+
+
+WHAT THE TOOL DOES
+------------------
+Combines two Amazon reports into a single keyword intelligence view:
+
+  1. SQPA (Search Query Performance Analytics)
+     → From Amazon Brand Analytics
+     → Gives: Search Query Volume, Brand Impression/Click/Purchase Share
+     → Monthly export
+
+  2. STIS (Search Term Impression Share)
+     → From Amazon Ads Console reports
+     → Gives: Ad spend, sales, impressions, clicks, orders per campaign
+     → Weekly export
+
+The app merges these on the Keyword field, classifies each keyword
+(Working / Wasted Spend / Opportunity / Inefficient / No Signal) based
+on adjustable thresholds, and lets you drill into campaign-level
+metrics by clicking any keyword row.
+
+
+HOW CLASSIFICATION WORKS
+-------------------------
+Each keyword is scored in this priority order:
+
+  💸 Wasted Spend  — Spend >= threshold AND sales = $0
+  ✅ Working       — Brand IS >= threshold AND ACOS <= threshold AND sales >= threshold
+  ⚠️ Inefficient   — Sales > 0 AND ACOS > threshold AND spend >= threshold
+  💡 Opportunity   — SQV >= threshold AND Brand IS < threshold
+  ➖ No Signal     — Doesn't meet any of the above
+
+Thresholds are set by sliders in the "⚙️ Insight Thresholds" expander
+above the keyword table — no code changes needed.
+
+
+HOW ELIGIBLE IMPRESSIONS IS CALCULATED
+----------------------------------------
+  Eligible Impressions = Ad Impressions / (Search Term Impression Share / 100)
+
+At keyword level, we use an impressions-weighted average of the
+Search Term IS across all campaigns. This represents the total
+auction pool for that search term across the report period.
+
+
+KEY THINGS TO KNOW IF YOU MODIFY THE CODE
+------------------------------------------
+1. The app is a single file: app.py — all logic lives there.
+
+2. load_sqpa() — handles the SQPA CSV (note: real headers are on row 2,
+   not row 1; skiprows=1 handles this).
+
+3. load_stis() — handles the STIS CSV. Dollar signs in Spend/Sales columns
+   are cleaned with regex=False (important — $ is a regex anchor if
+   regex=True).
+
+4. Both functions are decorated with @st.cache_data so re-uploading
+   the same file won't re-process it.
+
+5. show_kw_table() is called 5 times (once per tab). Each call gets
+   a unique tab_key parameter to avoid duplicate Streamlit element IDs.
+
+6. Brand colours are defined at the top of app.py as constants
+   (TEAL_BLUE, POWDER_BLUE, FLAME, etc.) — change them there to restyle.
+
+
+USING THE CHAT HISTORY (CHAT_HISTORY.txt)
+------------------------------------------
+The CHAT_HISTORY.txt file contains the full conversation between the
+Growisto team and Claude (AI) during which this tool was designed
+and built from scratch.
+
+If you want to continue making changes using Claude:
+  1. Open Claude (claude.ai or Claude desktop app)
+  2. Start a new conversation
+  3. Paste relevant sections from CHAT_HISTORY.txt as context
+  4. Describe what you want to change
+
+The chat history includes:
+  - Why each feature was built the way it was
+  - Bugs that were fixed and how
+  - Design decisions and trade-offs
+  - All iterations of the code
+
+
+QUESTIONS?
+----------
+Refer to CHAT_HISTORY.txt for full context, or reach out to the
+Growisto team member who set this up.

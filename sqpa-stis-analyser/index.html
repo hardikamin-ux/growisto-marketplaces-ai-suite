@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SQPA × STIS Analyser | Growisto</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; background: #F6F6F4; color: #1D1D20; min-height: 100vh; }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 260px; min-width: 260px;
+    background: #367588; padding: 24px 16px;
+    color: #fff; display: flex; flex-direction: column; gap: 20px;
+  }
+  #sidebar h3 { font-size: 13px; font-weight: 700; color: #B8DBD9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  #sidebar label { font-size: 11px; font-weight: 600; color: #B8DBD9; display: block; margin-bottom: 4px; }
+  #sidebar hr { border: none; border-top: 1px solid #2A5A6A; }
+  #portfolio-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  #portfolio-list label { color: #fff; font-size: 12px; font-weight: 400; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  #portfolio-list input[type=checkbox] { accent-color: #B8DBD9; }
+  .sidebar-note { font-size: 11px; color: #B8DBD9; opacity: 0.8; line-height: 1.4; }
+
+  /* ── Main ── */
+  #main { flex: 1; padding: 24px; overflow-x: hidden; }
+
+  /* ── Header ── */
+  .header { background: linear-gradient(135deg, #367588, #2A5A6A); color: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 4px; }
+  .header-inner { display: flex; align-items: center; gap: 12px; }
+  .header-logo { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .header h1 { font-size: 24px; font-weight: 700; }
+  .header p { color: #B8DBD9; font-size: 13px; font-weight: 400; margin-top: 4px; }
+  .header-bar { height: 4px; background: #E35D34; border-radius: 2px; margin-bottom: 20px; }
+
+  /* ── Expander ── */
+  .expander { background: #fff; border: 1px solid #B8DBD9; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .expander-header { background: #B8DBD9; padding: 10px 16px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+  .expander-body { padding: 16px; display: flex; gap: 16px; }
+  .upload-col { flex: 1; }
+  .upload-col p { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .upload-col input[type=file] { width: 100%; font-family: 'Poppins', sans-serif; font-size: 12px; padding: 6px; border: 1px solid #B8DBD9; border-radius: 4px; background: #F6F6F4; cursor: pointer; }
+  .file-status { font-size: 11px; margin-top: 4px; min-height: 16px; }
+  .file-ok { color: #00A650; font-weight: 600; }
+  .file-err { color: #E53E3E; font-weight: 600; }
+
+  /* ── Info banner ── */
+  .info-banner { background: #B8DBD9; border-left: 4px solid #367588; color: #1D1D20; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 13px; margin-bottom: 16px; }
+
+  /* ── Thresholds ── */
+  .threshold-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .threshold-group h4 { font-size: 12px; font-weight: 700; color: #367588; margin-bottom: 10px; }
+  .slider-row { margin-bottom: 10px; }
+  .slider-row label { font-size: 11px; font-weight: 500; color: #555; display: block; margin-bottom: 2px; }
+  .slider-row input[type=range] { width: 100%; accent-color: #367588; }
+  .slider-val { font-size: 11px; font-weight: 700; color: #367588; }
+
+  /* ── Period / KPI ── */
+  .period-info { font-size: 13px; color: #1D1D20; margin-bottom: 12px; }
+  .kpi-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .kpi-card { flex: 1; min-width: 100px; background: #B8DBD9; border-left: 4px solid #367588; padding: 10px 14px; border-radius: 0 8px 8px 0; }
+  .kpi-label { font-size: 11px; font-weight: 600; color: #1D1D20; margin-bottom: 3px; white-space: nowrap; }
+  .kpi-value { font-size: 20px; font-weight: 700; white-space: nowrap; }
+  .divider { border: none; border-top: 1px solid #B8DBD9; margin: 12px 0 16px 0; }
+
+  /* ── Tabs ── */
+  .tabs { border-bottom: 2px solid #B8DBD9; display: flex; gap: 0; margin-bottom: 0; flex-wrap: wrap; }
+  .tab-btn { padding: 8px 16px; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600; color: #1D1D20; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -2px; white-space: nowrap; }
+  .tab-btn.active { color: #367588; border-bottom: 2px solid #367588; }
+  .tab-panel { display: none; padding-top: 12px; }
+  .tab-panel.active { display: block; }
+
+  /* ── Column guide ── */
+  .col-guide { display: flex; background: #F0F7F8; border: 1px solid #B8DBD9; border-radius: 8px; overflow: hidden; margin-bottom: 10px; flex-wrap: wrap; }
+  .col-guide-title { padding: 7px 12px; background: #367588; display: flex; align-items: center; min-width: fit-content; }
+  .col-guide-title span { font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap; }
+  .col-guide-item { flex: 1; padding: 7px 12px; border-right: 1px solid #D1E8E7; min-width: 130px; }
+  .col-guide-item:last-child { border-right: none; }
+  .col-guide-abbr { font-size: 10px; font-weight: 700; color: #367588; margin-bottom: 2px; }
+  .col-guide-full { font-size: 11px; font-weight: 600; color: #1D1D20; margin-bottom: 1px; }
+  .col-guide-desc { font-size: 10px; color: #6B7280; line-height: 1.3; }
+
+  /* ── Table ── */
+  .table-wrap { border: 1px solid #B8DBD9; border-radius: 8px; overflow: auto; max-height: 540px; background: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { background: #367588; color: #fff; padding: 9px 12px; text-align: left; font-weight: 600; font-size: 11px; position: sticky; top: 0; z-index: 2; white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { background: #2A5A6A; }
+  thead th .sort-arrow { margin-left: 4px; opacity: 0.6; font-size: 10px; }
+  tbody tr { border-bottom: 1px solid #F0F0F0; cursor: pointer; transition: background 0.1s; }
+  tbody tr:hover { background: #F0F7F8; }
+  tbody tr.selected { background: #DCF0F2 !important; }
+  tbody td { padding: 8px 12px; white-space: nowrap; }
+  /* Constrain keyword column */
+  thead th:first-child, tbody td:first-child { max-width: 220px; min-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .table-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .table-caption { font-size: 11px; color: #6B7280; }
+  .btn-export { background: #367588; color: #fff; border: none; border-radius: 4px; padding: 6px 14px; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-export:hover { background: #2A5A6A; }
+
+  /* ── KW detail ── */
+  .kw-detail-header { padding: 12px 16px; background: #B8DBD9; border-left: 4px solid #367588; border-radius: 0 8px 8px 0; }
+  .kw-detail-header span.kw-name { font-weight: 700; color: #367588; font-size: 14px; }
+  .kw-detail-header span.kw-sub { color: #1D1D20; font-size: 12px; margin-left: 8px; }
+  .kw-mini-kpis { display: flex; border: 1px solid #B8DBD9; border-radius: 0 0 8px 8px; overflow: hidden; background: #fff; margin-bottom: 12px; }
+  .kw-mini-kpi { flex: 1; text-align: center; padding: 6px 10px; border-right: 1px solid #B8DBD9; }
+  .kw-mini-kpi:last-child { border-right: none; }
+  .kw-mini-lbl { font-size: 10px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+  .kw-mini-val { font-size: 13px; font-weight: 700; color: #367588; }
+
+  /* ── Status badges ── */
+  .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-working     { background: #D4EDDA; color: #00A650; }
+  .badge-wasted      { background: #FDECEA; color: #E53E3E; }
+  .badge-opportunity { background: #FFF3CD; color: #D4860A; }
+  .badge-inefficient { background: #FDE9DF; color: #E35D34; }
+  .badge-nosignal    { background: #F0F0F0; color: #6B7280; }
+
+  .tab-caption { font-size: 11px; color: #6B7280; margin-bottom: 8px; font-style: italic; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 900px) {
+    #sidebar { width: 200px; min-width: 200px; }
+    .threshold-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .layout { flex-direction: column; }
+    #sidebar { width: 100%; }
+    .threshold-grid { grid-template-columns: 1fr; }
+    .expander-body { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div>
+      <h3>Filters</h3>
+      <label>Portfolio</label>
+      <div id="portfolio-list"><span class="sidebar-note">Upload reports to see portfolios.</span></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-inner">
+        <img id="header-logo" class="header-logo hidden" src="" alt="Growisto" />
+        <div>
+          <h1>SQPA × STIS Analyser</h1>
+          <p>SQPA brand share × STIS paid performance — combined keyword intelligence</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-bar"></div>
+
+    <!-- Upload -->
+    <div class="expander" id="upload-expander">
+      <div class="expander-header" onclick="toggleExpander('upload-expander','upload-arrow')">
+        📂 Upload Reports <span id="upload-arrow">▾</span>
+      </div>
+      <div class="expander-body" id="upload-body">
+        <div class="upload-col">
+          <p>SQPA Report — Brand Analytics → Search Query Performance</p>
+          <input type="file" id="sqpa-file" accept=".csv" onchange="handleFileChange('sqpa')" />
+          <div class="file-status" id="sqpa-status"></div>
+        </div>
+        <div class="upload-col">
+          <p>STIS Report — Ads Console → Search Term Impression Share</p>
+          <input type="file" id="stis-file" accept=".csv" onchange="handleFileChange('stis')" />
+          <div class="file-status" id="stis-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-banner" id="waiting-banner">ℹ️ Upload both reports above to activate the tracker.</div>
+
+    <!-- App content -->
+    <div id="app-content" class="hidden">
+
+      <!-- Thresholds -->
+      <div class="expander" id="thresh-expander">
+        <div class="expander-header" onclick="toggleExpander('thresh-expander','thresh-arrow')">
+          ⚙️ Insight Thresholds <span id="thresh-arrow">▾</span>
+        </div>
+        <div class="expander-body hidden" id="thresh-body">
+          <div class="threshold-grid" style="width:100%">
+            <div class="threshold-group">
+              <h4>✅ Working</h4>
+              <div class="slider-row"><label>Min IS (%) <span class="slider-val" id="val-w-is">5.0</span></label><input type="range" id="sl-w-is" min="0" max="50" step="0.5" value="5" oninput="updateSliderVal('w-is',this.value,'%');rerender()"/></div>
+              <div class="slider-row"><label>Max ACOS (%) <span class="slider-val" id="val-w-acos">30.0</span></label><input type="range" id="sl-w-acos" min="0" max="150" step="1" value="30" oninput="updateSliderVal('w-acos',this.value,'%');rerender()"/></div>
+              <div class="slider-row"><label>Min Sales ($) <span class="slider-val" id="val-w-sales">0.0</span></label><input type="range" id="sl-w-sales" min="0" max="500" step="5" value="0" oninput="updateSliderVal('w-sales',this.value,'$');rerender()"/></div>
+            </div>
+            <div class="threshold-group">
+              <h4>💡 Opportunity</h4>
+              <div class="slider-row"><label>Min SQV <span class="slider-val" id="val-o-sqv">500</span></label><input type="range" id="sl-o-sqv" min="0" max="10000" step="100" value="500" oninput="updateSliderVal('o-sqv',this.value,'');rerender()"/></div>
+              <div class="slider-row"><label>Max IS (%) <span class="slider-val" id="val-o-is">5.0</span></label><input type="range" id="sl-o-is" min="0" max="50" step="0.5" value="5" oninput="updateSliderVal('o-is',this.value,'%');rerender()"/></div>
+            </div>
+            <div class="threshold-group">
+              <h4>⚠️ Inefficient</h4>
+              <div class="slider-row"><label>Min ACOS (%) <span class="slider-val" id="val-i-acos">30.0</span></label><input type="range" id="sl-i-acos" min="0" max="150" step="1" value="30" oninput="updateSliderVal('i-acos',this.value,'%');rerender()"/></div>
+              <div class="slider-row"><label>Min Spend ($) <span class="slider-val" id="val-i-spend">5.0</span></label><input type="range" id="sl-i-spend" min="0" max="200" step="1" value="5" oninput="updateSliderVal('i-spend',this.value,'$');rerender()"/></div>
+            </div>
+            <div class="threshold-group">
+              <h4>💸 Wasted Spend</h4>
+              <div class="slider-row"><label>Min Spend ($) <span class="slider-val" id="val-ws-spend">5.0</span></label><input type="range" id="sl-ws-spend" min="0" max="200" step="1" value="5" oninput="updateSliderVal('ws-spend',this.value,'$');rerender()"/></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="period-info" id="period-info"></div>
+      <div class="kpi-row" id="kpi-row"></div>
+      <hr class="divider" />
+      <div class="tabs" id="tabs-bar"></div>
+      <div id="tabs-content"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let sqpaData = null, sqpaPeriod = '';
+let stisKwAgg = null, stisKampAgg = null, stisDateRange = '';
+let mergedData = null;
+let selectedPortfolios = new Set();
+let allPortfolios = [];
+let selectedKwIndex = null;
+let activeTab = 0;
+let sortCol = null, sortAsc = true;
+
+// ── Expander ───────────────────────────────────────────────────────────────────
+function toggleExpander(id, arrowId) {
+  const body = document.getElementById(id).querySelector('.expander-body');
+  const arrow = document.getElementById(arrowId);
+  body.classList.toggle('hidden');
+  if (arrow) arrow.textContent = body.classList.contains('hidden') ? '▸' : '▾';
+}
+
+// ── Slider ─────────────────────────────────────────────────────────────────────
+function updateSliderVal(key, val, unit) {
+  const el = document.getElementById('val-' + key);
+  if (!el) return;
+  el.textContent = unit === '' ? parseInt(val).toLocaleString() : parseFloat(val).toFixed(1);
+}
+
+// ── File handler ───────────────────────────────────────────────────────────────
+function handleFileChange(type) {
+  const input = document.getElementById(type + '-file');
+  const status = document.getElementById(type + '-status');
+  const file = input.files[0];
+  if (!file) return;
+  status.textContent = 'Reading…'; status.className = 'file-status';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      if (type === 'sqpa') parseSQPA(e.target.result, file.name);
+      else parseSTIS(e.target.result, file.name);
+    } catch (err) {
+      status.textContent = '✗ ' + err.message;
+      status.className = 'file-status file-err';
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Parse SQPA ─────────────────────────────────────────────────────────────────
+// Row 0 = metadata, Row 1 = headers, Rows 2+ = data  (replicates skiprows=1)
+function parseSQPA(text, filename) {
+  const status = document.getElementById('sqpa-status');
+  const raw = Papa.parse(text, { header: false, skipEmptyLines: true, encoding: 'UTF-8' });
+  const rows = raw.data;
+  if (rows.length < 2) throw new Error('File too short — expected at least 2 rows');
+
+  // Extract period from row 0
+  let period = '';
+  try {
+    const r0 = rows[0];
+    const yearRaw  = (r0[2] || '').replace(/Select year=\["?/, '').replace(/"?\]/, '').trim();
+    const monthRaw = (r0[3] || '').replace(/Select month=\["?/, '').replace(/"?\]/, '').trim();
+    period = (yearRaw && monthRaw) ? monthRaw + ' ' + yearRaw : (r0[0] || '').trim();
+  } catch(e) { period = ''; }
+  sqpaPeriod = period;
+
+  // Row 1 = headers, rows 2+ = data
+  const headers = rows[1].map(h => h.trim());
+  const dataRows = rows.slice(2);
+
+  // Column renames — matches Python exactly, including both ATC column name variants
+  const colMap = {
+    'Search Query':                'Keyword',
+    'Search Query Volume':         'SQV',
+    'Impressions: Brand Share %':  'IS',
+    'Clicks: Brand Share %':       'CS',
+    'Cart Adds: Brand Share %':    'ATC',
+    'Add to Cart: Brand Share %':  'ATC',
+    'Purchases: Brand Share %':    'PS',
+  };
+
+  sqpaData = dataRows.map(row => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (row[i] || '').trim(); });
+    const out = { ATC: NaN }; // default ATC to NaN if column absent
+    for (const [src, dst] of Object.entries(colMap)) {
+      if (obj[src] !== undefined) out[dst] = obj[src];
+    }
+    out['SQV'] = parseNumeric(out['SQV']);
+    out['IS']  = parseNumeric(out['IS']);
+    out['CS']  = parseNumeric(out['CS']);
+    out['ATC'] = parseNumeric(out['ATC']);
+    out['PS']  = parseNumeric(out['PS']);
+    out['Keyword'] = (out['Keyword'] || '').toLowerCase().trim();
+    return out;
+  }).filter(r => r['Keyword'] !== '');
+
+  status.textContent = '✓ ' + filename + ' (' + sqpaData.length + ' keywords)';
+  status.className = 'file-status file-ok';
+  tryActivate();
+}
+
+// ── Parse STIS ─────────────────────────────────────────────────────────────────
+// Dollar sign stripping: literal replace (not regex) — mirrors pandas regex=False
+function parseSTIS(text, filename) {
+  const status = document.getElementById('stis-status');
+  const parsed = Papa.parse(text, { header: true, skipEmptyLines: true, encoding: 'UTF-8', transformHeader: h => h.trim() });
+  const rows = parsed.data;
+  if (!rows.length) throw new Error('File appears empty');
+
+  function stripDollar(val) {
+    if (val === undefined || val === null) return NaN;
+    return parseNumeric(String(val).split('$').join('').split(',').join('').trim());
+  }
+
+  // Find impression share column — same logic as Python
+  // Look specifically for "Search Term Impression Share" first, then fall back
+  const allCols = Object.keys(rows[0] || {});
+  const isColName = allCols.find(c => c.toLowerCase() === 'search term impression share')
+    || allCols.find(c => c.toLowerCase().includes('search term impression share'))
+    || allCols.find(c => c.toLowerCase().includes('impression share'))
+    || null;
+
+  const flatRows = rows.map(r => {
+    const spend  = stripDollar(r['Spend']);
+    const sales  = stripDollar(r['7 Day Total Sales']);
+    const clicks = parseNumeric(r['Clicks']);
+    const impr   = parseNumeric(r['Impressions']);
+    const orders = parseNumeric(r['7 Day Total Orders (#)']);
+    const kw     = (r['Customer Search Term'] || '').trim().toLowerCase();
+    const date   = parseDate(r['Date']);
+    const camp   = (r['Campaign Name'] || '').trim();
+    const port   = (r['Portfolio name'] || '').trim();
+    let stisIS = NaN;
+    if (isColName) {
+      stisIS = parseNumeric(String(r[isColName] || '').replace('%', '').trim());
+    }
+    return { kw, date, camp, port, spend, sales, clicks, impr, orders, stisIS };
+  }).filter(r => r.kw !== '');
+
+  // Normalise IS to 0–100 if values are in 0–1 range
+  const validIS = flatRows.map(r => r.stisIS).filter(v => !isNaN(v));
+  const maxIS = validIS.length ? Math.max(...validIS) : NaN;
+  if (!isNaN(maxIS) && maxIS <= 1.0) {
+    flatRows.forEach(r => { if (!isNaN(r.stisIS)) r.stisIS *= 100; });
+  }
+
+  // ── Campaign-level aggregation ──
+  const campMap = new Map();
+  flatRows.forEach(r => {
+    const key = r.kw + '|||' + r.camp + '|||' + r.port;
+    if (!campMap.has(key)) campMap.set(key, { kw: r.kw, camp: r.camp, port: r.port, spend:0, sales:0, impr:0, clicks:0, orders:0, isWeightedNum:0, isWeightedDen:0 });
+    const g = campMap.get(key);
+    g.spend  += nanToZero(r.spend);
+    g.sales  += nanToZero(r.sales);
+    g.impr   += nanToZero(r.impr);
+    g.clicks += nanToZero(r.clicks);
+    g.orders += nanToZero(r.orders);
+    if (!isNaN(r.stisIS) && !isNaN(r.impr) && r.impr > 0) {
+      g.isWeightedNum += r.stisIS * r.impr;
+      g.isWeightedDen += r.impr;
+    }
+  });
+
+  stisKampAgg = [];
+  campMap.forEach(g => {
+    const acos   = g.sales > 0  ? g.spend / g.sales * 100  : NaN;
+    const ctr    = g.impr  > 0  ? g.clicks / g.impr * 100  : NaN;
+    const cpc    = g.clicks > 0 ? g.spend / g.clicks       : NaN;
+    const cvr    = g.clicks > 0 ? g.orders / g.clicks * 100: NaN;
+    const stisIS = g.isWeightedDen > 0 ? g.isWeightedNum / g.isWeightedDen : NaN;
+    stisKampAgg.push({ Keyword: g.kw, Campaign: g.camp, Portfolio: g.port, Spend: g.spend, Sales: g.sales, Impressions: g.impr, Clicks: g.clicks, Orders: g.orders, ACOS: acos, CTR: ctr, CPC: cpc, CVR: cvr, STIS_IS: stisIS });
+  });
+
+  // ── Keyword-level aggregation ──
+  const kwMap = new Map();
+  stisKampAgg.forEach(r => {
+    if (!kwMap.has(r.Keyword)) kwMap.set(r.Keyword, { spend:0, sales:0, impr:0, clicks:0, orders:0, isWeightedNum:0, isWeightedDen:0, portfolioCounts: new Map(), dateMin: null, dateMax: null });
+    const g = kwMap.get(r.Keyword);
+    g.spend  += r.Spend; g.sales  += r.Sales; g.impr   += r.Impressions;
+    g.clicks += r.Clicks; g.orders += r.Orders;
+    if (r.Portfolio) g.portfolioCounts.set(r.Portfolio, (g.portfolioCounts.get(r.Portfolio) || 0) + 1);
+    if (!isNaN(r.STIS_IS) && r.Impressions > 0) {
+      g.isWeightedNum += r.STIS_IS * r.Impressions;
+      g.isWeightedDen += r.Impressions;
+    }
+  });
+
+  flatRows.forEach(r => {
+    if (!kwMap.has(r.kw)) return;
+    const g = kwMap.get(r.kw);
+    if (r.date) {
+      if (!g.dateMin || r.date < g.dateMin) g.dateMin = r.date;
+      if (!g.dateMax || r.date > g.dateMax) g.dateMax = r.date;
+    }
+  });
+
+  stisKwAgg = [];
+  kwMap.forEach((g, kw) => {
+    const acos = g.sales  > 0 ? g.spend  / g.sales  * 100 : NaN;
+    const ctr  = g.impr   > 0 ? g.clicks / g.impr   * 100 : NaN;
+    const cpc  = g.clicks > 0 ? g.spend  / g.clicks       : NaN;
+    const cvr  = g.clicks > 0 ? g.orders / g.clicks * 100 : NaN;
+    const wIS  = g.isWeightedDen > 0 ? g.isWeightedNum / g.isWeightedDen : NaN;
+    // All portfolios for this keyword
+    const allPorts = [...g.portfolioCounts.keys()].filter(p => p).sort();
+    const port = allPorts.length ? allPorts.join(' , ') : 'No Portfolio';
+    const portfolioSet = new Set(allPorts.length ? allPorts : ['No Portfolio']);
+    stisKwAgg.push({ Keyword: kw, Spend: g.spend, Sales: g.sales, Impressions: g.impr, Clicks: g.clicks, Orders: g.orders, Portfolio: port, PortfolioSet: portfolioSet, ACOS: acos, CTR: ctr, CPC: cpc, CVR: cvr, Weighted_STIS_IS: wIS, Date_min: g.dateMin, Date_max: g.dateMax });
+  });
+
+  const allDates = stisKwAgg.flatMap(r => [r.Date_min, r.Date_max]).filter(Boolean);
+  if (allDates.length) {
+    const dMin = new Date(Math.min(...allDates.map(d => d.getTime())));
+    const dMax = new Date(Math.max(...allDates.map(d => d.getTime())));
+    stisDateRange = fmtDate(dMin) + ' → ' + fmtDate(dMax);
+  } else { stisDateRange = '–'; }
+
+  status.textContent = '✓ ' + filename + ' (' + stisKwAgg.length + ' keywords)';
+  status.className = 'file-status file-ok';
+  tryActivate();
+}
+
+// ── Activate ───────────────────────────────────────────────────────────────────
+function tryActivate() {
+  if (!sqpaData || !stisKwAgg) return;
+  const stisMap = new Map(stisKwAgg.map(r => [r.Keyword, r]));
+  mergedData = sqpaData.map(sq => {
+    const st = stisMap.get(sq.Keyword) || {};
+    return {
+      Keyword: sq.Keyword, SQV: sq.SQV, IS: sq.IS, CS: sq.CS, ATC: sq.ATC, PS: sq.PS,
+      Spend: st.Spend !== undefined ? st.Spend : NaN,
+      Sales: st.Sales !== undefined ? st.Sales : NaN,
+      ACOS:  st.ACOS  !== undefined ? st.ACOS  : NaN,
+      Portfolio:    st.Portfolio    || '–',
+      PortfolioSet: st.PortfolioSet || new Set(['–']),
+      Impressions:  st.Impressions  !== undefined ? st.Impressions : NaN,
+      Clicks:       st.Clicks       !== undefined ? st.Clicks      : NaN,
+      Orders:       st.Orders       !== undefined ? st.Orders      : NaN,
+      CTR: st.CTR !== undefined ? st.CTR : NaN,
+      CPC: st.CPC !== undefined ? st.CPC : NaN,
+      CVR: st.CVR !== undefined ? st.CVR : NaN,
+    };
+  });
+
+  const portSet = new Set();
+  mergedData.forEach(r => r.PortfolioSet.forEach(p => { if (p && p !== '–') portSet.add(p); }));
+  allPortfolios = [...portSet].sort();
+  selectedPortfolios = new Set(allPortfolios);
+  buildPortfolioFilter();
+
+  document.getElementById('waiting-banner').classList.add('hidden');
+  document.getElementById('app-content').classList.remove('hidden');
+  rerender();
+}
+
+// ── Portfolio filter ───────────────────────────────────────────────────────────
+function buildPortfolioFilter() {
+  const el = document.getElementById('portfolio-list');
+  if (!allPortfolios.length) { el.innerHTML = '<span class="sidebar-note">No portfolio data found.</span>'; return; }
+  el.innerHTML = allPortfolios.map(p =>
+    `<label><input type="checkbox" checked onchange="togglePortfolio('${escAttr(p)}')" /> ${escHtml(p)}</label>`
+  ).join('');
+}
+
+function togglePortfolio(p) {
+  if (selectedPortfolios.has(p)) selectedPortfolios.delete(p);
+  else selectedPortfolios.add(p);
+  selectedKwIndex = null;
+  rerender();
+}
+
+// ── Re-render ──────────────────────────────────────────────────────────────────
+function rerender() {
+  if (!mergedData) return;
+  const t = getThresholds();
+
+  // Filter: show keyword if at least one of its portfolios is selected
+  const filtered = mergedData.filter(r => { for (const p of r.PortfolioSet) { if (selectedPortfolios.has(p)) return true; } return false; });
+  const classified = filtered.map(r => ({ ...r, Status: classify(r, t) }));
+  const statusOrder = { 'Wasted Spend':0, 'Inefficient':1, 'Opportunity':2, 'Working':3, 'No Signal':4 };
+  classified.sort((a, b) => (statusOrder[a.Status] || 0) - (statusOrder[b.Status] || 0));
+
+  // Period info
+  document.getElementById('period-info').innerHTML =
+    `<b>SQPA period:</b> ${escHtml(sqpaPeriod || '–')} &nbsp;·&nbsp; <b>STIS period:</b> ${escHtml(stisDateRange)} &nbsp;·&nbsp; <b>${classified.length.toLocaleString()}</b> keywords tracked`;
+
+  // KPIs
+  const working     = classified.filter(r => r.Status === 'Working').length;
+  const wasted      = classified.filter(r => r.Status === 'Wasted Spend').length;
+  const opportunity = classified.filter(r => r.Status === 'Opportunity').length;
+  const inefficient = classified.filter(r => r.Status === 'Inefficient').length;
+  const totSpend    = classified.reduce((s, r) => s + nanToZero(r.Spend), 0);
+  const totSales    = classified.reduce((s, r) => s + nanToZero(r.Sales), 0);
+  const overallACOS = totSales > 0 ? totSpend / totSales * 100 : NaN;
+
+  document.getElementById('kpi-row').innerHTML = [
+    { label: 'Total KWs',       value: classified.length.toLocaleString(), color: '#367588' },
+    { label: '✅ Working',       value: working.toLocaleString(),           color: '#00A650' },
+    { label: '💸 Wasted Spend',  value: wasted.toLocaleString(),            color: '#E53E3E' },
+    { label: '💡 Opportunity',   value: opportunity.toLocaleString(),       color: '#D4860A' },
+    { label: '⚠️ Inefficient',   value: inefficient.toLocaleString(),       color: '#E35D34' },
+    { label: 'Total Spend',      value: '$' + totSpend.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}), color: '#367588' },
+    { label: 'Overall ACOS',     value: !isNaN(overallACOS) ? overallACOS.toFixed(1)+'%' : 'N/A', color: '#367588' },
+  ].map(k => `<div class="kpi-card" style="border-left-color:${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-value" style="color:${k.color}">${k.value}</div></div>`).join('');
+
+  // Tabs
+  const tabs = [
+    { label: `All Keywords (${classified.length.toLocaleString()})`, rows: classified, caption: null },
+    { label: `✅ Working (${working})`, rows: classified.filter(r=>r.Status==='Working').sort((a,b)=>nanToZero(b.Sales)-nanToZero(a.Sales)), caption: null },
+    { label: `💸 Wasted Spend (${wasted})`, rows: classified.filter(r=>r.Status==='Wasted Spend').sort((a,b)=>nanToZero(b.Spend)-nanToZero(a.Spend)), caption: `Spend ≥ $${t.waste_min_spend.toFixed(0)} with $0 sales — review bids or pause.` },
+    { label: `💡 Opportunity (${opportunity})`, rows: classified.filter(r=>r.Status==='Opportunity').sort((a,b)=>nanToZero(b.SQV)-nanToZero(a.SQV)), caption: `SQV ≥ ${t.opp_min_sqv.toLocaleString()} and brand IS < ${t.opp_max_is}% — brand is underrepresented.` },
+    { label: `⚠️ Inefficient (${inefficient})`, rows: classified.filter(r=>r.Status==='Inefficient').sort((a,b)=>nanToZero(b.ACOS)-nanToZero(a.ACOS)), caption: `Sales > $0, ACOS > ${t.ineff_min_acos.toFixed(0)}%, Spend ≥ $${t.ineff_min_spend.toFixed(0)} — optimise bids.` },
+  ];
+  if (activeTab >= tabs.length) activeTab = 0;
+
+  document.getElementById('tabs-bar').innerHTML = tabs.map((tab, i) =>
+    `<button class="tab-btn ${i===activeTab?'active':''}" onclick="switchTab(${i})">${tab.label}</button>`
+  ).join('');
+
+  document.getElementById('tabs-content').innerHTML = tabs.map((tab, i) =>
+    `<div class="tab-panel ${i===activeTab?'active':''}" id="tab-panel-${i}">
+      ${tab.caption ? `<div class="tab-caption">${escHtml(tab.caption)}</div>` : ''}
+      ${renderKwTable(tab.rows, i)}
+     </div>`
+  ).join('');
+
+  // Restore selected row
+  if (selectedKwIndex !== null) {
+    const row = document.querySelector(`#tab-panel-${activeTab} tbody tr[data-idx="${selectedKwIndex}"]`);
+    if (row) { row.classList.add('selected'); renderKwDetail(tabs[activeTab].rows, selectedKwIndex, activeTab); }
+  }
+}
+
+function switchTab(i) { activeTab = i; selectedKwIndex = null; rerender(); }
+
+// ── Render keyword table ───────────────────────────────────────────────────────
+function renderKwTable(rows, tabIdx) {
+  const colGuide = `<div class="col-guide">
+    <div class="col-guide-title"><span>📖 Column Guide</span></div>
+    <div class="col-guide-item"><div class="col-guide-abbr">SQV</div><div class="col-guide-full">Search Query Volume</div><div class="col-guide-desc">Total monthly searches (SQPA)</div></div>
+    <div class="col-guide-item"><div class="col-guide-abbr">Brand Impr. Share</div><div class="col-guide-full">Brand Impression Share</div><div class="col-guide-desc">Brand impr ÷ total impr (SQPA)</div></div>
+    <div class="col-guide-item"><div class="col-guide-abbr">Brand Click Share</div><div class="col-guide-full">Brand Click Share</div><div class="col-guide-desc">Brand clicks ÷ total clicks (SQPA)</div></div>
+    <div class="col-guide-item"><div class="col-guide-abbr">Brand ATC Share</div><div class="col-guide-full">Brand Add-to-Cart Share</div><div class="col-guide-desc">Brand ATCs ÷ total ATCs (SQPA)</div></div>
+    <div class="col-guide-item"><div class="col-guide-abbr">Brand Purch. Share</div><div class="col-guide-full">Brand Purchase Share</div><div class="col-guide-desc">Brand purchases ÷ total (SQPA)</div></div>
+  </div>`;
+
+  if (!rows.length) return colGuide + '<div class="info-banner">No keywords match this filter.</div>';
+
+  const cols = ['Keyword','Portfolio','SQV','Brand Impr. Share','Brand Click Share','Brand ATC Share','Brand Purch. Share','Spend','Sales','ACOS','Status'];
+  const thead = `<thead><tr>${cols.map(c => `<th onclick="sortTable(${tabIdx},'${c}')">${escHtml(c)}<span class="sort-arrow">${sortCol===c?(sortAsc?'▲':'▼'):'⇅'}</span></th>`).join('')}</tr></thead>`;
+  const tbody = '<tbody>' + rows.map((r, i) =>
+    `<tr data-idx="${i}" onclick="onRowClick(${tabIdx},${i})">
+      <td title="${escAttr(toTitleCase(r.Keyword))}">${escHtml(toTitleCase(r.Keyword))}</td>
+      <td>${escHtml(r.Portfolio)}</td>
+      <td>${fmtNum(r.SQV)}</td>
+      <td>${fmtPct(r.IS)}</td>
+      <td>${fmtPct(r.CS)}</td>
+      <td>${fmtPct(r.ATC)}</td>
+      <td>${fmtPct(r.PS)}</td>
+      <td>${fmtDollar(r.Spend)}</td>
+      <td>${fmtDollar(r.Sales)}</td>
+      <td>${fmtAcos(r.ACOS)}</td>
+      <td>${statusBadge(r.Status)}</td>
+     </tr>`
+  ).join('') + '</tbody>';
+
+  return colGuide +
+    `<div class="table-wrap"><table>${thead}${tbody}</table></div>` +
+    `<div class="table-footer"><span class="table-caption">${rows.length.toLocaleString()} keywords · Click a row to see campaign breakdown</span><button class="btn-export" onclick="exportKwCSV(${tabIdx})">⬇ Export</button></div>` +
+    `<div id="kw-detail-${tabIdx}"></div>`;
+}
+
+// ── Row click ─────────────────────────────────────────────────────────────────
+function onRowClick(tabIdx, rowIdx) {
+  if (selectedKwIndex === rowIdx) {
+    selectedKwIndex = null;
+    document.querySelectorAll(`#tab-panel-${tabIdx} tbody tr`).forEach(r => r.classList.remove('selected'));
+    document.getElementById('kw-detail-' + tabIdx).innerHTML = '';
+    return;
+  }
+  selectedKwIndex = rowIdx;
+  document.querySelectorAll(`#tab-panel-${tabIdx} tbody tr`).forEach(r => r.classList.remove('selected'));
+  const row = document.querySelector(`#tab-panel-${tabIdx} tbody tr[data-idx="${rowIdx}"]`);
+  if (row) row.classList.add('selected');
+  renderKwDetail(getTabRows(tabIdx), rowIdx, tabIdx);
+}
+
+function getTabRows(tabIdx) {
+  if (!mergedData) return [];
+  const t = getThresholds();
+  const filtered = mergedData.filter(r => { for (const p of r.PortfolioSet) { if (selectedPortfolios.has(p)) return true; } return false; });
+  const classified = filtered.map(r => ({ ...r, Status: classify(r, t) }));
+  const statusOrder = { 'Wasted Spend':0,'Inefficient':1,'Opportunity':2,'Working':3,'No Signal':4 };
+  classified.sort((a,b) => (statusOrder[a.Status]||0)-(statusOrder[b.Status]||0));
+  if (tabIdx===0) return classified;
+  if (tabIdx===1) return classified.filter(r=>r.Status==='Working').sort((a,b)=>nanToZero(b.Sales)-nanToZero(a.Sales));
+  if (tabIdx===2) return classified.filter(r=>r.Status==='Wasted Spend').sort((a,b)=>nanToZero(b.Spend)-nanToZero(a.Spend));
+  if (tabIdx===3) return classified.filter(r=>r.Status==='Opportunity').sort((a,b)=>nanToZero(b.SQV)-nanToZero(a.SQV));
+  if (tabIdx===4) return classified.filter(r=>r.Status==='Inefficient').sort((a,b)=>nanToZero(b.ACOS)-nanToZero(a.ACOS));
+  return classified;
+}
+
+// ── KW detail (campaign breakdown) ────────────────────────────────────────────
+// Note: Eligible Impressions removed from campaign table (matches v3 Python)
+function renderKwDetail(rows, rowIdx, tabIdx) {
+  const r = rows[rowIdx];
+  if (!r) return;
+  const kw = r.Keyword;
+
+  const kpis = [
+    ['SQV',               !isNaN(r.SQV) ? parseInt(r.SQV).toLocaleString() : '–'],
+    ['Brand Impr. Share', fmtPct(r.IS)],
+    ['Total Spend',       fmtDollar(r.Spend)],
+    ['Total Sales',       fmtDollar(r.Sales)],
+    ['ACOS',              fmtAcos(r.ACOS)],
+    ['Status',            statusBadge(r.Status)],
+  ];
+  const miniKpis = kpis.map(([lbl,val]) =>
+    `<div class="kw-mini-kpi"><div class="kw-mini-lbl">${lbl}</div><div class="kw-mini-val">${val}</div></div>`
+  ).join('');
+
+  const camps = stisKampAgg.filter(c => c.Keyword === kw);
+  let campTable = '';
+  if (!camps.length) {
+    campTable = '<div class="info-banner">No campaign data found for this keyword in the uploaded STIS report.</div>';
+  } else {
+    // Campaign table — no Eligible Impressions (matches v3)
+    const campCols = ['Campaign','Portfolio','Impressions','IS Share','Clicks','CTR','CPC','Spend','Sales','ACOS','CVR','Orders'];
+    const thead = `<thead><tr>${campCols.map(c=>`<th>${escHtml(c)}</th>`).join('')}</tr></thead>`;
+    const tbody = '<tbody>' + camps.map(c =>
+      `<tr>
+        <td>${escHtml(c.Campaign)}</td>
+        <td>${escHtml(c.Portfolio)}</td>
+        <td>${fmtInt(c.Impressions)}</td>
+        <td>${!isNaN(c.STIS_IS) ? c.STIS_IS.toFixed(2)+'%' : '–'}</td>
+        <td>${fmtInt(c.Clicks)}</td>
+        <td>${!isNaN(c.CTR) ? c.CTR.toFixed(2)+'%' : '–'}</td>
+        <td>${!isNaN(c.CPC) ? '$'+c.CPC.toFixed(2) : '–'}</td>
+        <td>${fmtDollar(c.Spend)}</td>
+        <td>${fmtDollar(c.Sales)}</td>
+        <td>${fmtAcos(c.ACOS)}</td>
+        <td>${!isNaN(c.CVR) ? c.CVR.toFixed(2)+'%' : '–'}</td>
+        <td>${!isNaN(c.Orders) ? parseInt(c.Orders).toLocaleString() : '–'}</td>
+       </tr>`
+    ).join('') + '</tbody>';
+    campTable = `<div class="table-wrap" style="max-height:300px"><table>${thead}${tbody}</table></div>
+      <button class="btn-export" style="margin-top:8px" onclick="exportCampCSV('${escAttr(kw)}')">⬇ Export campaigns</button>`;
+  }
+
+  document.getElementById('kw-detail-' + tabIdx).innerHTML =
+    `<div class="kw-detail-header"><span class="kw-name">${escHtml(toTitleCase(kw))}</span><span class="kw-sub">— campaign breakdown</span></div>
+     <div class="kw-mini-kpis">${miniKpis}</div>
+     ${campTable}`;
+}
+
+// ── Sort ───────────────────────────────────────────────────────────────────────
+function sortTable(tabIdx, col) {
+  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+  const rows = getTabRows(tabIdx);
+  const fieldMap = { 'Keyword':'Keyword','Portfolio':'Portfolio','SQV':'SQV','Brand Impr. Share':'IS','Brand Click Share':'CS','Brand ATC Share':'ATC','Brand Purch. Share':'PS','Spend':'Spend','Sales':'Sales','ACOS':'ACOS','Status':'Status' };
+  const field = fieldMap[col];
+  if (!field) return;
+  rows.sort((a,b) => {
+    let av = a[field], bv = b[field];
+    if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    av = nanToZero(av); bv = nanToZero(bv);
+    return sortAsc ? av - bv : bv - av;
+  });
+  const panel = document.getElementById('tab-panel-' + tabIdx);
+  if (!panel) return;
+  const tableWrap = panel.querySelector('.table-wrap');
+  if (!tableWrap) return;
+  const cols = ['Keyword','Portfolio','SQV','Brand Impr. Share','Brand Click Share','Brand ATC Share','Brand Purch. Share','Spend','Sales','ACOS','Status'];
+  const thead = `<thead><tr>${cols.map(c=>`<th onclick="sortTable(${tabIdx},'${c}')">${escHtml(c)}<span class="sort-arrow">${sortCol===c?(sortAsc?'▲':'▼'):'⇅'}</span></th>`).join('')}</tr></thead>`;
+  const tbody = '<tbody>' + rows.map((r,i) =>
+    `<tr data-idx="${i}" onclick="onRowClick(${tabIdx},${i})">
+      <td title="${escAttr(toTitleCase(r.Keyword))}">${escHtml(toTitleCase(r.Keyword))}</td>
+      <td>${escHtml(r.Portfolio)}</td><td>${fmtNum(r.SQV)}</td>
+      <td>${fmtPct(r.IS)}</td><td>${fmtPct(r.CS)}</td><td>${fmtPct(r.ATC)}</td><td>${fmtPct(r.PS)}</td>
+      <td>${fmtDollar(r.Spend)}</td><td>${fmtDollar(r.Sales)}</td><td>${fmtAcos(r.ACOS)}</td>
+      <td>${statusBadge(r.Status)}</td></tr>`
+  ).join('') + '</tbody>';
+  tableWrap.innerHTML = `<table>${thead}${tbody}</table>`;
+  selectedKwIndex = null;
+}
+
+// ── Export ─────────────────────────────────────────────────────────────────────
+function exportKwCSV(tabIdx) {
+  const rows = getTabRows(tabIdx);
+  const cols = ['Keyword','Portfolio','SQV','Brand Impr. Share','Brand Click Share','Brand ATC Share','Brand Purch. Share','Spend','Sales','ACOS','Status'];
+  const data = rows.map(r => [
+    csvCell(toTitleCase(r.Keyword)), csvCell(r.Portfolio),
+    isNaN(r.SQV)?'':parseInt(r.SQV),
+    isNaN(r.IS)?'':r.IS.toFixed(2)+'%', isNaN(r.CS)?'':r.CS.toFixed(2)+'%',
+    isNaN(r.ATC)?'':r.ATC.toFixed(2)+'%', isNaN(r.PS)?'':r.PS.toFixed(2)+'%',
+    isNaN(r.Spend)?'':'$'+r.Spend.toFixed(2), isNaN(r.Sales)?'':'$'+r.Sales.toFixed(2),
+    isNaN(r.ACOS)?'':r.ACOS.toFixed(1)+'%', r.Status,
+  ].join(',')).join('\n');
+  downloadCSV('keywords_tab'+tabIdx+'.csv', cols.join(',')+'\n'+data);
+}
+
+function exportCampCSV(kw) {
+  const camps = stisKampAgg.filter(c => c.Keyword === kw);
+  const cols = ['Campaign','Portfolio','Impressions','IS Share','Clicks','CTR','CPC','Spend','Sales','ACOS','CVR','Orders'];
+  const data = camps.map(c => [
+    csvCell(c.Campaign), csvCell(c.Portfolio),
+    isNaN(c.Impressions)?'':parseInt(c.Impressions),
+    isNaN(c.STIS_IS)?'':c.STIS_IS.toFixed(2)+'%',
+    isNaN(c.Clicks)?'':parseInt(c.Clicks),
+    isNaN(c.CTR)?'':c.CTR.toFixed(2)+'%', isNaN(c.CPC)?'':'$'+c.CPC.toFixed(2),
+    isNaN(c.Spend)?'':'$'+c.Spend.toFixed(2), isNaN(c.Sales)?'':'$'+c.Sales.toFixed(2),
+    isNaN(c.ACOS)?'':c.ACOS.toFixed(1)+'%', isNaN(c.CVR)?'':c.CVR.toFixed(2)+'%',
+    isNaN(c.Orders)?'':parseInt(c.Orders),
+  ].join(',')).join('\n');
+  downloadCSV('campaigns_'+kw.replace(/\s+/g,'_')+'.csv', cols.join(',')+'\n'+data);
+}
+
+function downloadCSV(filename, content) {
+  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Classification (exact port of Python) ─────────────────────────────────────
+function classify(row, t) {
+  const spend = !isNaN(row.Spend) ? row.Spend : 0;
+  const sales = !isNaN(row.Sales) ? row.Sales : 0;
+  const acos  = !isNaN(row.ACOS)  ? row.ACOS  : null;
+  const isV   = !isNaN(row.IS)    ? row.IS    : 0;
+  const sqv   = !isNaN(row.SQV)   ? row.SQV   : 0;
+  if (spend >= t.waste_min_spend && sales === 0) return 'Wasted Spend';
+  if (isV >= t.work_min_is && sales >= t.work_min_sales && acos !== null && acos <= t.work_max_acos) return 'Working';
+  if (acos !== null && acos > t.ineff_min_acos && spend >= t.ineff_min_spend && sales > 0) return 'Inefficient';
+  if (sqv >= t.opp_min_sqv && isV < t.opp_max_is) return 'Opportunity';
+  return 'No Signal';
+}
+
+function getThresholds() {
+  return {
+    work_min_is:     parseFloat(document.getElementById('sl-w-is').value),
+    work_max_acos:   parseFloat(document.getElementById('sl-w-acos').value),
+    work_min_sales:  parseFloat(document.getElementById('sl-w-sales').value),
+    opp_min_sqv:     parseFloat(document.getElementById('sl-o-sqv').value),
+    opp_max_is:      parseFloat(document.getElementById('sl-o-is').value),
+    ineff_min_acos:  parseFloat(document.getElementById('sl-i-acos').value),
+    ineff_min_spend: parseFloat(document.getElementById('sl-i-spend').value),
+    waste_min_spend: parseFloat(document.getElementById('sl-ws-spend').value),
+  };
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function fmtNum(v)    { return isNaN(v)||v===null ? '–' : parseInt(v).toLocaleString(); }
+function fmtInt(v)    { return isNaN(v)||v===null ? '–' : Math.round(v).toLocaleString(); }
+function fmtPct(v)    { return isNaN(v)||v===null ? '–' : v.toFixed(2)+'%'; }
+function fmtDollar(v) { return isNaN(v)||v===null ? '–' : '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtAcos(v)   { return isNaN(v)||v===null ? '–' : v.toFixed(1)+'%'; }
+function fmtDate(d)   { return d ? d.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'}) : '–'; }
+function toTitleCase(s) { return String(s||'').replace(/\w\S*/g, t=>t.charAt(0).toUpperCase()+t.slice(1).toLowerCase()); }
+function escHtml(s)   { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s)   { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function csvCell(v)   { const s=String(v||''); return (s.includes(',')||s.includes('"')||s.includes('\n')) ? '"'+s.replace(/"/g,'""')+'"' : s; }
+function nanToZero(v) { return (isNaN(v)||v===null||v===undefined) ? 0 : v; }
+function parseNumeric(v) { if (v===null||v===undefined||v==='') return NaN; const n=Number(String(v).trim()); return isNaN(n)?NaN:n; }
+function parseDate(v) { if (!v) return null; const d=new Date(v); return isNaN(d.getTime())?null:d; }
+
+function statusBadge(s) {
+  const map = { 'Working':['✅ Working','badge-working'], 'Wasted Spend':['💸 Wasted Spend','badge-wasted'], 'Opportunity':['💡 Opportunity','badge-opportunity'], 'Inefficient':['⚠️ Inefficient','badge-inefficient'], 'No Signal':['➖ No Signal','badge-nosignal'] };
+  const [label,cls] = map[s]||[s,''];
+  return `<span class="status-badge ${cls}">${escHtml(label)}</span>`;
+}
+</script>
+<script>
+  (function() {
+    const TRACKING_URL = 'https://script.google.com/macros/s/AKfycbxf8LQkBGNWOZ7eVYoOvKpcejcbii-ULFaTEsnviP-s4CPxjIFmo7jmXjiTl5JgOLbz/exec';
+    const TOOL_NAME    = 'SQPA x STIS Analyser';
+    const IDLE_MS = 10*60*1000, BEAT_MS = 60*1000;
+    function logEvent(action) {
+      const name=sessionStorage.getItem('gs_name'), project=sessionStorage.getItem('gs_project');
+      if (!name||!project) return;
+      const now=new Date(), _p=new URLSearchParams({date:now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),timestamp:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}),name,project,tool:TOOL_NAME,action});new Image().src=TRACKING_URL+'?'+_p.toString();
+    }
+    let beatTimer,idleTimer,isIdle=false;
+    function startBeat(){clearInterval(beatTimer);beatTimer=setInterval(()=>{if(!isIdle)logEvent('Heartbeat');},BEAT_MS);}
+    function resetIdle(){clearTimeout(idleTimer);if(isIdle){isIdle=false;logEvent('Resumed');startBeat();}idleTimer=setTimeout(()=>{isIdle=true;clearInterval(beatTimer);logEvent('Idle');},IDLE_MS);}
+    ['mousemove','click','keypress','scroll','touchstart'].forEach(e=>document.addEventListener(e,resetIdle,{passive:true}));
+    window.addEventListener('beforeunload',()=>logEvent('Closed'));
+    logEvent('Opened');startBeat();resetIdle();
+  })();
+</script>
+</body>
+</html>
