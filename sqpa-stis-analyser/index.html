@@ -17,7 +17,20 @@
     width: 260px; min-width: 260px;
     background: #367588; padding: 24px 16px;
     color: #fff; display: flex; flex-direction: column; gap: 20px;
+    transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease;
+    position: relative;
   }
+  #sidebar.collapsed { width: 36px; min-width: 36px; padding: 24px 6px; overflow: hidden; }
+  #sidebar.collapsed .sidebar-content { display: none; }
+  #sidebar-toggle {
+    position: absolute; top: 16px; right: -12px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #367588; border: 2px solid #B8DBD9;
+    color: #fff; font-size: 11px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    z-index: 10; transition: background 0.15s;
+  }
+  #sidebar-toggle:hover { background: #2A5A6A; }
   #sidebar h3 { font-size: 13px; font-weight: 700; color: #B8DBD9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
   #sidebar label { font-size: 11px; font-weight: 600; color: #B8DBD9; display: block; margin-bottom: 4px; }
   #sidebar hr { border: none; border-top: 1px solid #2A5A6A; }
@@ -140,7 +153,8 @@
 
   <!-- Sidebar -->
   <div id="sidebar">
-    <div>
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle filters">◀</button>
+    <div class="sidebar-content">
       <h3>Filters</h3>
       <label>Portfolio</label>
       <div id="portfolio-list"><span class="sidebar-note">Upload reports to see portfolios.</span></div>
@@ -228,6 +242,14 @@
 </div>
 
 <script>
+// ── Sidebar toggle ────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  sidebar.classList.toggle('collapsed');
+  btn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+}
+
 // ── State ──────────────────────────────────────────────────────────────────────
 let sqpaData = null, sqpaPeriod = '';
 let stisKwAgg = null, stisKampAgg = null, stisDateRange = '';
