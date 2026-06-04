@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feedback — Growisto Marketplaces AI Suite</title>
+  <link rel="icon" type="image/png" href="../assets/growisto-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #3d7080; --teal-dark: #2f5c6b; --teal-light: #e8f0f2;
+      --text-primary: #1a1a2e; --text-secondary: #555770;
+      --border: #e2e8f0; --bg: #f7f9fc; --white: #ffffff;
+    }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; }
+    nav { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    nav img { height: 28px; }
+    .nav-badge { background: var(--teal); color: var(--white); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
+    .container { max-width: 600px; margin: 0 auto; padding: 48px 2rem 80px; width: 100%; flex: 1; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; color: var(--teal); text-decoration: none; margin-bottom: 32px; }
+    .back-link:hover { color: var(--teal-dark); }
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; }
+    .page-header p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+    .divider { width: 48px; height: 3px; background: var(--teal); border-radius: 2px; margin: 20px 0 28px; }
+    .form-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%; font-family: 'Poppins', sans-serif; font-size: 0.85rem;
+      padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text-primary);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--teal); background: var(--white); }
+    .form-group input[readonly] { opacity: 0.6; cursor: not-allowed; }
+    .form-group textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .btn-submit {
+      width: 100%; padding: 12px; background: var(--teal); color: var(--white);
+      border: none; border-radius: 8px; font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 8px;
+      transition: background 0.15s;
+    }
+    .btn-submit:hover { background: var(--teal-dark); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Success state */
+    .success-msg { display: none; text-align: center; padding: 40px 20px; }
+    .success-msg .checkmark { font-size: 3rem; margin-bottom: 16px; }
+    .success-msg h2 { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+    .success-msg p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; }
+    .btn-back { display: inline-block; padding: 10px 24px; background: var(--teal); color: var(--white); border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+    .btn-back:hover { background: var(--teal-dark); }
+
+    footer { background: var(--text-primary); color: rgba(255,255,255,0.5); padding: 20px 2rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; }
+    footer img { height: 22px; opacity: 0.85; filter: brightness(0) invert(1); }
+
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <img src="../assets/growisto-logo.png" alt="Growisto" />
+    <span class="nav-badge">Marketplaces AI Suite</span>
+  </nav>
+
+  <div class="container">
+    <a class="back-link" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Suite
+    </a>
+
+    <div class="page-header">
+      <h1>Share Feedback 💬</h1>
+      <p>Found a bug, have a suggestion, or just want to share something? We'd love to hear from you.</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="form-card">
+
+      <!-- Form -->
+      <div id="feedback-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Name</label>
+            <select id="field-name">
+              <option value="">— Select your name —</option>
+              <option>Aashay Sakalley</option>
+              <option>Abhijeet Singh Rajput</option>
+              <option>Abhishek Shukla</option>
+              <option>Agrawal Sourabh</option>
+              <option>Anil Jaiswar</option>
+              <option>Aniket Shirsat</option>
+              <option>Anmol Yadav</option>
+              <option>Aryan Lamba</option>
+              <option>Chiranshu Dhingra</option>
+              <option>Divya Vishnani</option>
+              <option>Divyansh Singh Sisodiya</option>
+              <option>Gaurav Mahajan</option>
+              <option>Gaurav Nandkishor Pande</option>
+              <option>Ghodvinde Prajwal</option>
+              <option>Hardik Amin</option>
+              <option>Harshit Bajpai</option>
+              <option>Kaustubh Nagawade</option>
+              <option>Manisha Chauhan</option>
+              <option>Mansi Mange</option>
+              <option>Mayank Shukla</option>
+              <option>Nabeel Shaikh</option>
+              <option>Navin Sachdev</option>
+              <option>Nidhi Mali</option>
+              <option>Nikhit Rapelli</option>
+              <option>Nilesh Pawar</option>
+              <option>Paridhi Shukla</option>
+              <option>Prateek Negi</option>
+              <option>Prerna Punjabi</option>
+              <option>Princy Deepak</option>
+              <option>Puja Priya</option>
+              <option>Rohil Arora</option>
+              <option>Rupal Verma</option>
+              <option>Saba Khan</option>
+              <option>Shivani Mirchandani</option>
+              <option>Shristi S</option>
+              <option>Shrushti Mane</option>
+              <option>Souvik Paul</option>
+              <option>Swapnanil Sarkar</option>
+              <option>Tanay Sharma</option>
+              <option>Tuhiin Puri</option>
+              <option>Vidhi Mange</option>
+              <option>Yash Khurana</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Project</label>
+            <select id="field-project">
+              <option value="">— Select a project —</option>
+              <option>RealkBeauty</option>
+              <option>Technosport</option>
+              <option>Jean Rish</option>
+              <option>Voyager Harness TikTok Ads</option>
+              <option>Heads Up For Tails</option>
+              <option>The Solved Skin</option>
+              <option>Arvind Fashions</option>
+              <option>Covers and All</option>
+              <option>Silverist Amazon</option>
+              <option>Oziva - Flipkart</option>
+              <option>TRNR</option>
+              <option>Dermasensa</option>
+              <option>Vishvaura Ventures - Amazon</option>
+              <option>Ultrahuman</option>
+              <option>Smart Wheels</option>
+              <option>TiresNMore</option>
+              <option>Jean Rish - Closed</option>
+              <option>Resq Jewelery</option>
+              <option>Everlayer</option>
+              <option>Louis Philippe</option>
+              <option>Reebok</option>
+              <option>Lagom Foods</option>
+              <option>Mayorga DSP + AMC</option>
+              <option>GNC</option>
+              <option>Indian Garage Co</option>
+              <option>Mayorga Coffee</option>
+              <option>Jewelili</option>
+              <option>MMS Trading</option>
+              <option>Horse Consulting - FTE</option>
+              <option>Gurunanda - FTE</option>
+              <option>TMRW - Nauti Nati</option>
+              <option>TMRW - Vierdo &amp; Juneberry</option>
+              <option>Bewakoof - Amazon Marketing</option>
+              <option>TMRW - Urbano</option>
+              <option>MSI</option>
+              <option>Wella</option>
+              <option>Yogabar</option>
+              <option>Oswal Publishers</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tool</label>
+            <select id="field-tool">
+              <option value="">Select a tool...</option>
+              <option>Search Term Harvest & Negate</option>
+              <option>ASIN Performance Analyser</option>
+              <option>Amazon Listing Generator</option>
+              <option>BSR Scrapper</option>
+              <option>Amazon Review Scrapper</option>
+              <option>Amazon Review Sentiment Analysis</option>
+              <option>Amazon FBA Fees Calculator</option>
+              <option>SQPA × STIS Analyser</option>
+              <option>Amazon Audit (Without Access)</option>
+              <option>Amazon Audit With Access (L1)</option>
+              <option>General / Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Feedback Type</label>
+            <select id="field-type">
+              <option value="">Select type...</option>
+              <option>Bug</option>
+              <option>Suggestion</option>
+              <option>General</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="field-message" placeholder="Describe your feedback in detail..."></textarea>
+        </div>
+
+        <button class="btn-submit" id="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+      </div>
+
+      <!-- Success -->
+      <div class="success-msg" id="success-msg">
+        <div class="checkmark">✅</div>
+        <h2>Feedback Submitted!</h2>
+        <p>Thanks for taking the time. Your feedback has been logged and the resolution owner will look into it.</p>
+        <a class="btn-back" href="/">Back to Suite</a>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <img src="../assets/growisto-logo.png" alt="Growisto" />
+    <span>Internal Use Only</span>
+  </footer>
+
+<script>
+  const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbwqp2O0snleWAQEh_tQfy9Yc5l4v1AMGer7Sqtb9Al4YVAR2aslbekFxOfvnxvNcF3dPQ/exec';
+
+  // Auto-select name and project from sessionStorage if available
+  window.addEventListener('DOMContentLoaded', () => {
+    const name    = sessionStorage.getItem('gs_name')    || '';
+    const project = sessionStorage.getItem('gs_project') || '';
+    if (name)    document.getElementById('field-name').value    = name;
+    if (project) document.getElementById('field-project').value = project;
+  });
+
+  function submitFeedback() {
+    const name    = document.getElementById('field-name').value;
+    const project = document.getElementById('field-project').value;
+    const tool    = document.getElementById('field-tool').value;
+    const type    = document.getElementById('field-type').value;
+    const message = document.getElementById('field-message').value.trim();
+
+    if (!name)    { alert('Please select your name.'); return; }
+    if (!project) { alert('Please select your project.'); return; }
+    if (!tool)    { alert('Please select a tool.'); return; }
+    if (!type)    { alert('Please select a feedback type.'); return; }
+    if (!message) { alert('Please enter a message.'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const now = new Date();
+    const date = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timestamp = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+    const params = new URLSearchParams({ date, timestamp, name, project, tool, type, message });
+    new Image().src = FEEDBACK_URL + '?' + params.toString();
+
+    // Show success after short delay
+    setTimeout(() => {
+      document.getElementById('feedback-form').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'block';
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
