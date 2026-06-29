@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Listing Audit (Child ASIN) — Growisto Marketplaces AI Suite</title>
+  <link rel="icon" type="image/png" href="../assets/growisto-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #3d7080; --teal-dark: #2f5c6b; --teal-light: #e8f0f2;
+      --text-primary: #1a1a2e; --text-secondary: #555770;
+      --border: #e2e8f0; --bg: #f7f9fc; --white: #ffffff;
+      --claude-badge: #7c3aed; --claude-badge-bg: #ede9fe;
+    }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; }
+    nav { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    nav img { height: 28px; }
+    .nav-badge { background: var(--teal); color: var(--white); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
+    .container { max-width: 720px; margin: 0 auto; padding: 48px 2rem 80px; width: 100%; flex: 1; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; color: var(--teal); text-decoration: none; margin-bottom: 32px; }
+    .back-link:hover { color: var(--teal-dark); }
+    .tool-header { margin-bottom: 36px; }
+    .badge-claude { display: inline-flex; align-items: center; background: var(--claude-badge-bg); color: var(--claude-badge); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-bottom: 14px; }
+    .tool-header h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin-bottom: 12px; line-height: 1.2; }
+    .tool-header p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+    .divider { width: 48px; height: 3px; background: var(--teal); border-radius: 2px; margin: 24px 0; }
+    .section-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 20px; }
+    .steps { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+    .step { display: flex; align-items: flex-start; gap: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+    .step-num { width: 32px; height: 32px; background: var(--teal); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+    .step-content { flex: 1; }
+    .step-content strong { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .step-content span { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; display: block; }
+    .step-content span strong { display: inline; font-size: inherit; }
+    .note { background: var(--teal-light); border-left: 3px solid var(--teal); border-radius: 8px; padding: 14px 18px; font-size: 0.82rem; color: var(--teal-dark); line-height: 1.6; }
+    footer { background: var(--text-primary); color: rgba(255,255,255,0.5); padding: 20px 2rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; }
+    footer img { height: 22px; opacity: 0.85; filter: brightness(0) invert(1); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <img src="../assets/growisto-logo.png" alt="Growisto" />
+    <span class="nav-badge">Marketplaces AI Suite</span>
+  </nav>
+
+  <div class="container">
+    <a class="back-link" href="/">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Suite
+    </a>
+
+    <div class="tool-header">
+      <span class="badge-claude">Claude Plugin</span>
+      <h1>Amazon Listing Audit (Child ASIN)</h1>
+      <p>Scores any Amazon product listing out of 100 across 6 pillars — Title, Bullets, Description/A+, Images, Keyword Coverage, and Ratings &amp; Reviews. Delivers a Growisto-branded Excel workbook and 12-slide optimisation deck with diagnosis, rewritten copy, image recommendations, and a priority action plan.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">Before You Start</div>
+    <div class="note" style="margin-bottom:24px;">Have the <strong>Child ASIN</strong> you want to audit ready. Claude will pull the listing data and guide you through each pillar — you may be asked to provide the <strong>target keywords</strong> and any <strong>competitor ASINs</strong> for benchmark comparison.</div>
+
+    <div class="section-title">How to Use</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>Open Claude Desktop</strong>
+          <span>This plugin runs on Claude Desktop. Open it and make sure you're signed in with your Growisto account.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>Trigger the Workflow</strong>
+          <span>Start a new chat and share the ASIN you want to audit — e.g. <strong>"Run a listing audit for ASIN B0XXXXXXXX"</strong> or <strong>"Audit this Amazon listing: [ASIN]"</strong>. Claude will automatically trigger the audit workflow.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>Answer Claude's Questions</strong>
+          <span>Claude will ask for target keywords, competitor ASINs for benchmarking, and marketplace details. It then scores the listing across <strong>6 pillars</strong> and generates diagnosis notes and rewritten copy for each section.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <strong>Download Your Deliverables</strong>
+          <span>Once complete, Claude generates two files — a <strong>Growisto-branded Excel workbook</strong> with the full scorecard and a <strong>12-slide PPTX optimisation deck</strong> with diagnosis, rewritten copy, image recommendations, and a priority action plan.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">This plugin requires <strong>Claude Desktop</strong> — it will not work on claude.ai in the browser.</div>
+  </div>
+
+  <footer>
+    <img src="../assets/growisto-logo.png" alt="Growisto" />
+    <span>Internal Use Only</span>
+  </footer>
+
+<script>
+  (function() {
+    const TRACKING_URL = 'https://script.google.com/macros/s/AKfycbxf8LQkBGNWOZ7eVYoOvKpcejcbii-ULFaTEsnviP-s4CPxjIFmo7jmXjiTl5JgOLbz/exec';
+    const TOOL_NAME    = 'Amazon Listing Audit (Child ASIN)';
+    const IDLE_MS = 10*60*1000, BEAT_MS = 60*1000;
+    function logEvent(action) {
+      const name=sessionStorage.getItem('gs_name'), project=sessionStorage.getItem('gs_project');
+      if (!name||!project) return;
+      const now=new Date(), _p=new URLSearchParams({date:now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),timestamp:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}),name,project,tool:TOOL_NAME,action});new Image().src=TRACKING_URL+'?'+_p.toString();
+    }
+    let beatTimer,idleTimer,isIdle=false;
+    function startBeat(){clearInterval(beatTimer);beatTimer=setInterval(()=>{if(!isIdle)logEvent('Heartbeat');},BEAT_MS);}
+    function resetIdle(){clearTimeout(idleTimer);if(isIdle){isIdle=false;logEvent('Resumed');startBeat();}idleTimer=setTimeout(()=>{isIdle=true;clearInterval(beatTimer);logEvent('Idle');},IDLE_MS);}
+    ['mousemove','click','keypress','scroll','touchstart'].forEach(e=>document.addEventListener(e,resetIdle,{passive:true}));
+    window.addEventListener('beforeunload',()=>logEvent('Closed'));
+    logEvent('Opened');startBeat();resetIdle();
+  })();
+</script>
+</body>
+</html>
