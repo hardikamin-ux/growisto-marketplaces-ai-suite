@@ -1,0 +1,66 @@
+========================================
+  Growisto — Keyword-Level Organic Tracker
+========================================
+
+WHAT YOU NEED
+-------------
+- Python 3.9 or higher installed on your machine
+  Download from: https://www.python.org/downloads/
+  (tick "Add Python to PATH" during install)
+
+
+FIRST-TIME SETUP  (do this once only)
+--------------------------------------
+1. Open Command Prompt (press Win + R, type "cmd", press Enter)
+
+2. Navigate to this folder:
+   cd "%USERPROFILE%\Desktop\Organic Tracker"
+
+3. Install the required packages:
+   pip install -r requirements.txt
+
+
+HOW TO RUN
+----------
+1. Open Command Prompt
+
+2. Navigate to this folder:
+   cd "%USERPROFILE%\Desktop\Organic Tracker"
+
+3. Start the app:
+   python -m streamlit run app.py
+
+4. Your browser will open automatically at http://localhost:8501
+
+
+HOW TO USE THE APP
+------------------
+You need two CSV reports from Amazon each week:
+
+  1. SQPA Report (monthly)
+     Amazon Seller/Vendor Central
+     → Brand Analytics → Search Query Performance
+     → Export as CSV
+
+  2. STIS Report (weekly)
+     Amazon Ads Console
+     → Reports → Search Term Impression Share
+     → Export as CSV
+
+Upload both files using the "Upload Reports" panel at the top,
+then the tracker will load automatically.
+
+
+TIPS
+----
+- Use the "Portfolio" filter in the left sidebar to focus on
+  specific product lines.
+- Click "⚙️ Insight Thresholds" above the table to adjust what
+  counts as Working / Opportunity / Inefficient / Wasted Spend.
+- Click any keyword row to see a campaign-level breakdown.
+- Use the "⬇ Export" button to download any view as a CSV.
+
+
+QUESTIONS?
+----------
+Contact the team at Growisto.
