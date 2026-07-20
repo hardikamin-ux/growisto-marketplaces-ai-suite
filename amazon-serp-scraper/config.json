@@ -1,0 +1,14 @@
+{
+  "project": "reebok",
+  "geographies": {
+    "USA": {
+      "domain": "amazon.com",
+      "pincode": "10001",
+      "cap": 40,
+      "keywords": [
+        "COFFEE",
+        "ORGANIC COFFEE"
+      ]
+    }
+  }
+}

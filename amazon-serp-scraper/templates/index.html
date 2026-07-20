@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon SERP Scraper — Growisto</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Per-user workspace isolation ─────────────────────────────────────────────
+// Each browser gets a persistent random workspace id; every /api/ call carries
+// it, so multiple people can use the tool simultaneously without sharing
+// config, progress, results, or history. Profiles remain shared by design.
+(function () {
+  let sid = localStorage.getItem('serp_sid');
+  if (!sid) {
+    sid = Array.from(crypto.getRandomValues(new Uint8Array(8)),
+                     b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('serp_sid', sid);
+  }
+  window.SERP_SID = sid;
+  const _fetch = window.fetch.bind(window);
+  window.fetch = function (url, opts) {
+    if (typeof url === 'string' && url.startsWith('/api/')) {
+      url += (url.includes('?') ? '&' : '?') + 'sid=' + sid;
+    }
+    return _fetch(url, opts);
+  };
+})();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary:#367588; --primary-hover:#2A5A6A;
+    --secondary:#B8DBD9;
+    --accent:#E35D34; --accent-hover:#C94D28;
+    --text:#1D1D20;
+    --bg:#F6F6F4;
+    --white:#FFFFFF;
+    --blue:#367588; --blue-light:#B8DBD9;
+    --green:#16a34a; --green-light:#dcfce7;
+    --orange:#E35D34; --orange-light:#fde8e0;
+    --purple:#7c3aed; --purple-light:#ede9fe;
+    --teal:#0d9488; --teal-light:#ccfbf1;
+    --pink:#E35D34; --pink-light:#fde8e0;
+    --gray:#6b7280; --gray-light:#F6F6F4;
+    --border:#B8DBD9; --radius:8px; --shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  body { font-family:'Poppins',sans-serif;
+         background:#F6F6F4; color:#1D1D20; min-height:100vh; }
+
+  /* ── Stepper ── */
+  .stepper-header { background:#fff; border-bottom:2px solid var(--secondary);
+                    padding:20px 32px; display:flex; align-items:center; }
+  .step-item { display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .step-circle { width:32px; height:32px; border-radius:50%; display:flex;
+                 align-items:center; justify-content:center; font-size:13px;
+                 font-weight:700; border:2px solid var(--border);
+                 background:#fff; color:var(--gray); transition:all .2s; }
+  .step-item.active .step-circle { border-color:var(--primary); background:var(--primary); color:#fff; }
+  .step-item.done   .step-circle { border-color:var(--primary); background:var(--primary); color:#fff; }
+  .step-label { font-size:13px; font-weight:600; color:var(--gray); white-space:nowrap; }
+  .step-item.active .step-label { color:var(--primary); }
+  .step-item.done   .step-label { color:var(--primary); }
+  .step-connector { flex:1; height:2px; background:var(--border); min-width:24px; max-width:60px; margin:0 8px; }
+  .step-connector.done { background:var(--primary); }
+
+  /* ── Pages ── */
+  .page { display:none; padding:40px 32px; max-width:900px; margin:0 auto; }
+  .page.active { display:block; }
+
+  /* ── Card ── */
+  .card { background:#fff; border:1px solid var(--secondary); border-radius:var(--radius);
+          padding:28px; margin-bottom:20px; box-shadow:var(--shadow); }
+  .card h2 { font-size:18px; font-weight:700; margin-bottom:6px; color:var(--primary); }
+  .card p.sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+
+  /* ── Forms ── */
+  label { display:block; font-size:13px; font-weight:600; margin-bottom:5px; color:#374151; }
+  input[type=text], input[type=number], select, textarea {
+    width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:6px;
+    font-size:14px; outline:none; transition:border .15s; background:#fff;
+    font-family:inherit;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus { border-color:var(--primary); box-shadow:0 0 0 2px rgba(54,117,136,0.15); }
+  .form-row { display:grid; gap:16px; margin-bottom:16px; }
+  .form-row.cols2 { grid-template-columns:1fr 1fr; }
+  .form-row.cols4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+
+  /* ── Buttons ── */
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px;
+         border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;
+         border:none; transition:all .15s; }
+  .btn-primary { background:var(--primary); color:#fff; font-weight:600; }
+  .btn-primary:hover { background:var(--primary-hover); }
+  .btn-success { background:var(--primary); color:#fff; font-weight:600; }
+  .btn-success:hover { background:var(--primary-hover); }
+  .btn-danger  { background:var(--accent); color:#fff; font-weight:600; }
+  .btn-danger:hover  { background:var(--accent-hover); }
+  .btn-outline { background:#fff; color:var(--primary); border:1px solid var(--primary); font-weight:600; }
+  .btn-outline:hover { background:var(--secondary); }
+  .btn-ghost  { background:transparent; color:var(--gray); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--gray-light); }
+  .btn-cta { background:var(--accent); color:#fff; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; }
+  .btn-cta:hover { background:var(--accent-hover); }
+  .btn-sm { padding:5px 12px; font-size:12px; }
+  .btn-row { display:flex; gap:10px; margin-top:24px; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* ── Geo block ── */
+  .geo-block { border:1px solid var(--border); border-radius:var(--radius);
+               padding:20px; margin-bottom:16px; position:relative; }
+  .geo-block .remove-geo { position:absolute; top:12px; right:12px; }
+  .geo-title { font-size:14px; font-weight:700; margin-bottom:14px; color:#374151; }
+
+  /* ── Keywords ── */
+  .kw-section { border:1px solid var(--border); border-radius:var(--radius);
+                padding:18px; margin-bottom:14px; }
+  .kw-section h4 { font-size:14px; font-weight:700; margin-bottom:10px; }
+  .kw-input-row { display:flex; gap:8px; margin-bottom:10px; }
+  .kw-input-row input { flex:1; }
+  .kw-list { display:flex; flex-wrap:wrap; gap:6px; min-height:28px; }
+  .kw-tag { background:var(--blue-light); color:var(--blue); border-radius:4px;
+             padding:3px 8px; font-size:12px; font-weight:600; display:inline-flex;
+             align-items:center; gap:4px; }
+  .kw-tag .rm { cursor:pointer; font-size:15px; line-height:1; color:#93c5fd; }
+  .kw-tag .rm:hover { color:#1d4ed8; }
+  .kw-bulk-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .kw-bulk-label { font-size:12px; color:var(--gray); font-weight:600; margin-bottom:5px; }
+
+  /* ── Profile list ── */
+  .profile-list { display:flex; flex-direction:column; gap:8px; }
+  .profile-item { display:flex; align-items:center; justify-content:space-between;
+                  padding:10px 14px; border:1px solid var(--border); border-radius:6px; }
+  .profile-name { font-size:14px; font-weight:600; }
+  .profile-meta { font-size:11px; color:var(--gray); margin-top:2px; }
+
+  /* ── Progress ── */
+  .progress-bar-outer { background:var(--gray-light); border-radius:99px; height:16px;
+                         overflow:hidden; margin:12px 0; }
+  .progress-bar-inner { height:100%; background:var(--primary); border-radius:99px;
+                         transition:width .5s ease; }
+  .progress-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:20px; }
+  .pstat { background:var(--gray-light); border-radius:var(--radius); padding:14px; text-align:center; }
+  .pstat .val { font-size:28px; font-weight:800; }
+  .pstat .lbl { font-size:11px; color:var(--gray); font-weight:600; margin-top:2px; }
+  .pstat.sp   { background:#fde8e0; }
+  .pstat.org  { background:var(--secondary); }
+  .pstat.sb   { background:var(--secondary); }
+  .pstat.sbv  { background:var(--purple-light); }
+  .pstat.skip { background:#F6F6F4; border:1px solid var(--border); }
+  #progress-msg     { font-size:15px; font-weight:600; color:var(--primary); margin-top:8px; }
+  #progress-sub-msg { font-size:12px; color:var(--gray); margin-top:4px; font-style:italic;
+                      min-height:16px; }
+  #progress-done-msg { font-size:16px; font-weight:700; color:var(--green); margin-top:12px; display:none; }
+
+  /* ── Dashboard ── */
+  #step5 { padding:0; max-width:100%; }
+  .dash-header { background:var(--primary); border-bottom:none;
+                 padding:16px 28px; display:flex; align-items:center;
+                 justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .dash-title { font-size:20px; font-weight:800; color:#fff; }
+  .dash-meta  { font-size:12px; color:rgba(255,255,255,0.75); margin-top:2px; }
+  .dash-body  { padding:24px 28px; }
+
+  /* Tabs */
+  .tab-bar { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; }
+  .tab-btn { padding:6px 14px; border-radius:99px; font-size:13px; font-weight:600;
+              cursor:pointer; border:1px solid var(--border); background:#fff;
+              color:var(--gray); transition:all .15s; display:inline-flex; align-items:center; gap:6px; }
+  .tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .tab-btn:hover:not(.active) { background:var(--secondary); color:var(--primary); }
+  .tab-btn.kw-green { border-color:#16a34a; color:#15803d; background:#f0fdf4; }
+  .tab-btn.kw-green.active { background:#16a34a; border-color:#16a34a; color:#fff; }
+  .tab-btn.kw-yellow { border-color:#d97706; color:#92400e; background:#fffbeb; }
+  .tab-btn.kw-yellow.active { background:#d97706; border-color:#d97706; color:#fff; }
+  .tab-btn.kw-red { border-color:var(--accent); color:var(--accent); background:#fff5f2; }
+  .tab-btn.kw-red.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .kw-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* KPI */
+  .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:24px; }
+  .kpi-card { background:#fff; border:1px solid var(--secondary); border-radius:var(--radius);
+               padding:16px; text-align:center; box-shadow:var(--shadow); }
+  .kpi-card .kpi-val { font-size:30px; font-weight:800; color:var(--primary); }
+  .kpi-card .kpi-lbl { font-size:11px; color:var(--gray); font-weight:600; margin-top:3px; }
+  .kpi-card.total  { border-top:3px solid var(--text); }
+  .kpi-card.total  .kpi-val { color:var(--text); }
+  .kpi-card.sp     { border-top:3px solid var(--accent); }
+  .kpi-card.sp     .kpi-val { color:var(--accent); }
+  .kpi-card.org    { border-top:3px solid var(--primary); }
+  .kpi-card.sb     { border-top:3px solid var(--secondary); }
+  .kpi-card.sbv    { border-top:3px solid var(--purple); }
+  .kpi-card.sbv    .kpi-val { color:var(--purple); }
+  .kpi-card.brands { border-top:3px solid var(--accent); }
+  .kpi-card.brands .kpi-val { color:var(--accent); }
+
+  /* Charts */
+  .chart-row { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:24px; }
+  .chart-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+                padding:18px; box-shadow:var(--shadow); }
+  .chart-card h3 { font-size:13px; font-weight:700; margin-bottom:14px; color:#374151; }
+
+  /* ── Brand Insights ── */
+  .insights-section { background:#fff; border:1px solid var(--secondary); border-radius:var(--radius);
+                       padding:18px; margin-bottom:24px; box-shadow:var(--shadow); }
+  .insights-section .section-title { font-size:15px; font-weight:700; margin-bottom:14px;
+                                      padding-bottom:8px; border-bottom:2px solid var(--secondary); color:var(--primary); }
+  .insight-block { padding:12px 0; border-bottom:1px solid var(--border); }
+  .insight-block:last-child { border-bottom:none; padding-bottom:0; }
+  .insight-main { display:flex; align-items:flex-start; gap:10px; font-size:13px;
+                  color:#1e293b; line-height:1.5; margin-bottom:7px; }
+  .insight-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .insight-action { display:inline-flex; align-items:center; gap:6px; margin-left:19px;
+                    font-size:12px; color:var(--gray); background:var(--gray-light);
+                    border:1px solid var(--border); border-radius:6px; padding:4px 10px; }
+  .action-maintain { background:#dcfce7; color:#15803d; border-color:#16a34a; }
+  .action-outbid   { background:#fff7ed; color:#c2410c; border-color:#ea580c; }
+  .action-launch   { background:#fef2f2; color:#991b1b; border-color:#dc2626; }
+  .action-sb       { background:#ede9fe; color:#6d28d9; border-color:#7c3aed; }
+  .insight-legend  { display:flex; gap:16px; margin-top:14px; padding-top:10px;
+                     border-top:1px solid var(--border); flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--gray); }
+  .legend-dot { width:9px; height:9px; border-radius:50%; }
+
+  /* ── Top 5 Spotlight ── */
+  .spotlight-section { margin-bottom:24px; }
+  .spotlight-section h3 { font-size:13px; font-weight:700; margin-bottom:12px; color:#374151; }
+  .spotlight-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  .spotlight-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+                    padding:14px; box-shadow:var(--shadow); position:relative;
+                    display:flex; flex-direction:column; gap:6px; }
+  .spotlight-pos { font-size:32px; font-weight:900; color:var(--gray-light);
+                   line-height:1; position:absolute; top:10px; right:12px; }
+  .spotlight-card .badge { align-self:flex-start; }
+  .spotlight-brand { font-size:13px; font-weight:800; color:#1e293b; }
+  .spotlight-title { font-size:11px; color:var(--gray); line-height:1.4; }
+  .spotlight-asin  { font-size:11px; font-weight:700; color:var(--blue);
+                     text-decoration:none; margin-top:auto; }
+  .spotlight-asin:hover { text-decoration:underline; }
+  .spotlight-empty { background:var(--gray-light); border:1px dashed var(--border);
+                     border-radius:var(--radius); padding:14px; text-align:center;
+                     font-size:12px; color:var(--gray); }
+
+  /* ── Ranked card view ── */
+  .ranked-section { background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+                    padding:18px; margin-bottom:24px; box-shadow:var(--shadow); }
+  .ranked-section h3 { font-size:13px; font-weight:700; margin-bottom:12px; color:#374151; }
+  .ranked-item { display:flex; align-items:center; gap:12px; padding:8px 6px;
+                  border-bottom:1px solid var(--border); }
+  .ranked-item:last-child { border-bottom:none; }
+  .ranked-pos { width:32px; height:32px; border-radius:50%; background:var(--gray-light);
+                display:flex; align-items:center; justify-content:center;
+                font-size:12px; font-weight:800; flex-shrink:0; }
+  .ranked-pos.pos-top { background:var(--secondary); color:var(--primary); }
+  .ranked-brand { font-size:13px; font-weight:700; min-width:90px; max-width:120px;
+                   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ranked-title { font-size:12px; color:var(--gray); flex:1; overflow:hidden;
+                   text-overflow:ellipsis; white-space:nowrap; }
+  .ranked-asin  { font-size:11px; font-weight:700; color:var(--blue);
+                  text-decoration:none; white-space:nowrap; }
+  .ranked-asin:hover { text-decoration:underline; }
+
+  /* ── SB / SBV section ── */
+  .sb-section { background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+                 padding:18px; margin-bottom:24px; box-shadow:var(--shadow); }
+  .section-title { font-size:15px; font-weight:700; margin-bottom:12px; padding-bottom:8px;
+                    border-bottom:2px solid var(--secondary); color:var(--primary); }
+  .sb-keyword-group { margin-bottom:16px; }
+  .sb-keyword-label { font-size:12px; font-weight:700; color:var(--gray);
+                       letter-spacing:.04em; margin-bottom:8px;
+                       text-transform:uppercase; }
+  .sb-cards-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .sb-card { border:1px solid var(--border); border-radius:6px; padding:10px 14px;
+              display:flex; align-items:center; gap:10px; }
+  .sb-card .badge { flex-shrink:0; }
+  .sb-card-brand { font-size:13px; font-weight:700; }
+
+  /* ── Full results table ── */
+  .results-section { background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+                      padding:18px; box-shadow:var(--shadow); }
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .data-table th { background:var(--primary); color:#fff; padding:8px 12px; text-align:left;
+                    font-weight:700; border-bottom:2px solid var(--primary-hover); font-size:12px; }
+  .data-table td { padding:7px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .data-table tr:hover td { background:var(--secondary); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px;
+            font-weight:700; text-transform:uppercase; font-family:'Poppins',sans-serif; }
+  .badge-sp  { background:#fde8e0; color:var(--accent); }
+  .badge-org { background:var(--secondary); color:var(--primary); }
+  .badge-sb  { background:var(--secondary); color:var(--primary); }
+  .badge-sbv { background:var(--purple-light); color:var(--purple); }
+  .filter-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .filter-row input, .filter-row select { width:auto; flex:1; min-width:140px; }
+  .asin-link { color:var(--accent); text-decoration:none; font-weight:600; font-size:12px; }
+  .asin-link:hover { text-decoration:underline; color:var(--accent-hover); }
+  .title-cell { max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+
+  /* Pagination */
+  .pagination { display:flex; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .pagination .pg-info { font-size:12px; color:var(--gray); flex:1; }
+  .pg-btn { padding:4px 12px; border:1px solid var(--border); border-radius:4px;
+             background:#fff; font-size:12px; font-weight:600; cursor:pointer; }
+  .pg-btn:hover:not(:disabled) { background:var(--secondary); color:var(--primary); }
+  .pg-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .pg-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+  /* Misc */
+  .divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
+  .text-gray { color:var(--gray); }
+  .empty-state { text-align:center; padding:40px; color:var(--gray); font-size:14px; }
+  .toast { position:fixed; bottom:24px; right:24px; background:#1e293b; color:#fff;
+            padding:10px 18px; border-radius:8px; font-size:14px; font-weight:600;
+            box-shadow:0 4px 12px rgba(0,0,0,.25); transform:translateY(0);
+            transition:all .3s; z-index:9999; }
+  .toast.hide { transform:translateY(80px); opacity:0; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.3; transform: scale(0.6); }
+  }
+
+  @media (max-width:1100px) {
+    .spotlight-row { grid-template-columns:repeat(3,1fr); }
+  }
+  @media (max-width:900px) {
+    .kpi-row   { grid-template-columns:repeat(3,1fr); }
+    .chart-row { grid-template-columns:1fr; }
+    .spotlight-row { grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:600px) {
+    .kpi-row { grid-template-columns:repeat(2,1fr); }
+    .stepper-header { padding:12px 16px; }
+    .step-label { display:none; }
+    .spotlight-row { grid-template-columns:1fr 1fr; }
+    .progress-stats { grid-template-columns:repeat(3,1fr); }
+    .kw-bulk-row { grid-template-columns:1fr; }
+  }
+</style>
+<style id="uxElevation">
+  /* ═══════════ UX ELEVATION LAYER — visual only, zero functional change ═══════════ */
+
+  /* Ambient background — soft gradient wash + floating blobs */
+  body {
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(54,117,136,.10), transparent 60%),
+      radial-gradient(700px 450px at -10% 30%, rgba(227,93,52,.07), transparent 55%),
+      radial-gradient(600px 400px at 50% 110%, rgba(184,219,217,.25), transparent 60%),
+      #F6F6F4;
+    background-attachment: fixed;
+  }
+
+  /* Header — glassy + sticky */
+  .stepper-header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.82);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom: 1px solid rgba(184,219,217,.6);
+    box-shadow: 0 1px 20px rgba(29,29,32,.05);
+  }
+  .step-circle { transition: all .3s cubic-bezier(.34,1.56,.64,1); }
+  .step-item.active .step-circle {
+    background: linear-gradient(135deg,#367588,#4a9db3);
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(54,117,136,.4);
+    transform: scale(1.12);
+  }
+  .step-item:hover:not(.active) .step-circle { transform: scale(1.08); border-color: var(--primary); color: var(--primary); }
+  .step-connector { transition: background .5s ease; border-radius: 99px; height: 3px; }
+  .step-connector.done { background: linear-gradient(90deg,#367588,#4a9db3); }
+
+  /* Pages — entrance animation */
+  @keyframes pageIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .page.active { animation: pageIn .45s cubic-bezier(.22,.9,.35,1) both; }
+
+  /* Cards — depth, radius, hover lift */
+  .card, .chart-card, .kpi-card, .insights-section, .spotlight-section {
+    border-radius: 16px !important;
+    border: 1px solid rgba(184,219,217,.55) !important;
+    box-shadow: 0 1px 2px rgba(29,29,32,.04), 0 8px 24px -12px rgba(54,117,136,.18) !important;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover, .chart-card:hover {
+    box-shadow: 0 2px 4px rgba(29,29,32,.05), 0 16px 40px -14px rgba(54,117,136,.28) !important;
+    transform: translateY(-2px);
+  }
+  .kpi-card { cursor: default; }
+  .kpi-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 4px 8px rgba(29,29,32,.06), 0 18px 36px -12px rgba(54,117,136,.3) !important; }
+  .kpi-card .kpi-val { transition: color .2s; font-variant-numeric: tabular-nums; }
+
+  /* Buttons — gradients, lift, press */
+  .btn { border-radius: 10px; transition: all .22s cubic-bezier(.22,.9,.35,1); position: relative; overflow: hidden; }
+  .btn:active:not(:disabled) { transform: scale(.96); }
+  .btn-primary, .btn-success {
+    background: linear-gradient(135deg,#367588,#2A5A6A);
+    box-shadow: 0 3px 12px -3px rgba(54,117,136,.45);
+  }
+  .btn-primary:hover, .btn-success:hover {
+    background: linear-gradient(135deg,#3d8299,#2f6478);
+    box-shadow: 0 6px 20px -4px rgba(54,117,136,.55);
+    transform: translateY(-1px);
+  }
+  .btn-cta {
+    background: linear-gradient(135deg,#E35D34,#C94D28);
+    box-shadow: 0 4px 16px -4px rgba(227,93,52,.5);
+  }
+  .btn-cta:hover {
+    background: linear-gradient(135deg,#ef6a40,#d4552e);
+    box-shadow: 0 8px 26px -6px rgba(227,93,52,.6);
+    transform: translateY(-2px);
+  }
+  .btn-outline:hover { transform: translateY(-1px); }
+
+  /* Ripple */
+  .btn .ripple {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    background: rgba(255,255,255,.45); transform: scale(0);
+    animation: rippleAnim .55s ease-out forwards;
+  }
+  @keyframes rippleAnim { to { transform: scale(3.2); opacity: 0; } }
+
+  /* Inputs — rounded, animated focus ring */
+  input[type=text], input[type=number], input[type=time], select, textarea {
+    border-radius: 10px !important;
+    transition: border-color .2s, box-shadow .25s, transform .2s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 4px rgba(54,117,136,.14) !important;
+    transform: translateY(-1px);
+  }
+
+  /* Tabs — springy pills */
+  .tab-btn { transition: all .25s cubic-bezier(.34,1.4,.64,1); }
+  .tab-btn:hover:not(.active) { transform: translateY(-2px); box-shadow: 0 4px 12px -4px rgba(54,117,136,.3); }
+  .tab-btn.active { box-shadow: 0 4px 14px -4px rgba(54,117,136,.5); transform: translateY(-1px); }
+
+  /* Progress bar — animated shimmer stripes */
+  .progress-bar-outer { height: 18px; box-shadow: inset 0 1px 3px rgba(29,29,32,.08); }
+  .progress-bar-inner {
+    background: linear-gradient(90deg,#367588,#4a9db3,#367588);
+    background-size: 200% 100%;
+    animation: barFlow 2.2s linear infinite;
+    position: relative;
+  }
+  .progress-bar-inner::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+    background-size: 40% 100%; background-repeat: no-repeat;
+    animation: barShine 1.6s ease-in-out infinite;
+  }
+  @keyframes barFlow  { to { background-position: -200% 0; } }
+  @keyframes barShine { 0% { background-position: -60% 0; } 100% { background-position: 160% 0; } }
+
+  .pstat { border-radius: 14px; transition: transform .25s ease, box-shadow .25s ease; }
+  .pstat:hover { transform: translateY(-3px); box-shadow: 0 10px 24px -10px rgba(29,29,32,.2); }
+  .pstat .val { font-variant-numeric: tabular-nums; }
+
+  /* Dashboard header — gradient */
+  .dash-header {
+    background: linear-gradient(120deg,#2A5A6A 0%,#367588 55%,#3f88a0 100%);
+    box-shadow: 0 4px 24px -8px rgba(42,90,106,.5);
+  }
+
+  /* Tables — hover rows */
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: rgba(184,219,217,.18); }
+
+  /* kw tags — bouncy */
+  .kw-tag { border-radius: 8px; transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+  .kw-tag:hover { transform: scale(1.06); }
+
+  /* profile items */
+  .profile-item { border-radius: 12px; transition: all .2s ease; }
+  .profile-item:hover { border-color: var(--primary); box-shadow: 0 6px 18px -8px rgba(54,117,136,.3); transform: translateX(3px); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(54,117,136,.35); border-radius: 99px; border: 2px solid #F6F6F4; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(54,117,136,.55); }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed; top: -12px; z-index: 9999; pointer-events: none;
+    width: 9px; height: 14px; opacity: .95;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(105vh) rotate(720deg); opacity: .7; }
+  }
+
+  /* Done message pop */
+  #progress-done-msg { animation: donePop .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes donePop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* Landing hero */
+  .hero-banner {
+    background: linear-gradient(120deg,#2A5A6A 0%,#367588 60%,#3f88a0 100%);
+    border-radius: 20px; padding: 34px 34px 28px; margin-bottom: 22px;
+    color: #fff; position: relative; overflow: hidden;
+    box-shadow: 0 16px 40px -14px rgba(42,90,106,.45);
+    animation: pageIn .5s cubic-bezier(.22,.9,.35,1) both;
+  }
+  .hero-banner::before {
+    content: ''; position: absolute; right: -80px; top: -80px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(184,219,217,.25), transparent 70%);
+  }
+  .hero-banner::after {
+    content: ''; position: absolute; left: 30%; bottom: -110px;
+    width: 240px; height: 240px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(227,93,52,.18), transparent 70%);
+  }
+  .hero-text h1 { font-size: 26px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 8px; }
+  .hero-text p  { font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.85); max-width: 560px; }
+  .hero-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; position: relative; z-index: 1; }
+  .hero-stat {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25);
+    backdrop-filter: blur(6px); border-radius: 99px; padding: 7px 14px;
+    font-size: 12px; font-weight: 600; transition: all .25s ease;
+  }
+  .hero-stat:hover { background: rgba(255,255,255,.24); transform: translateY(-2px); }
+  .hs-ico { font-size: 14px; }
+
+  /* Reduced motion respect */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ STEPPER HEADER ══ -->
+<div class="stepper-header">
+  <div style="display:flex;align-items:center;gap:10px;margin-right:28px;white-space:nowrap;">
+    <img src="/static/growisto-logo.png" alt="Growisto" style="height:30px;width:auto;display:block;">
+    <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#64748b;
+          border-left:1px solid #e2e8f0;padding-left:10px;letter-spacing:-0.2px;">SERP Scraper</span>
+  </div>
+  <div class="step-item active" data-step="1" onclick="goStep(1)">
+    <div class="step-circle">1</div><div class="step-label">Project Setup</div>
+  </div>
+  <div class="step-connector" id="con1"></div>
+  <div class="step-item" data-step="2" onclick="goStep(2)">
+    <div class="step-circle">2</div><div class="step-label">Geographies</div>
+  </div>
+  <div class="step-connector" id="con2"></div>
+  <div class="step-item" data-step="3" onclick="goStep(3)">
+    <div class="step-circle">3</div><div class="step-label">Keywords</div>
+  </div>
+  <div class="step-connector" id="con3"></div>
+  <div class="step-item" data-step="4" onclick="goStep(4)">
+    <div class="step-circle">4</div><div class="step-label">Run Scrape</div>
+  </div>
+  <div class="step-connector" id="con4"></div>
+  <div class="step-item" data-step="5" onclick="goStep(5)">
+    <div class="step-circle">5</div><div class="step-label">Dashboard</div>
+  </div>
+</div>
+
+<!-- ══ STEP 1 — Project Setup ══ -->
+<div class="page active" id="step1">
+
+  <!-- Hero -->
+  <div class="hero-banner">
+    <div class="hero-text">
+      <h1>Amazon SERP Scraper</h1>
+      <p>Track who owns the search results for your keywords — sponsored slots,
+         organic ranks, and brand banners — across any Amazon marketplace.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hs-ico">🎯</span><span>SP &amp; Organic tracking</span></div>
+      <div class="hero-stat"><span class="hs-ico">📺</span><span>SB / SBV banner detection</span></div>
+      <div class="hero-stat"><span class="hs-ico">🕘</span><span>Daily auto-scrapes &amp; history</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Start a Project</h2>
+    <p class="sub">Tell us the brand you're tracking, or load a saved profile below.</p>
+
+    <div class="form-row" style="margin-bottom:14px;">
+      <div>
+        <label>Brand to Track <span style="color:#ef4444;">*</span></label>
+        <input type="text" id="brandName" placeholder="The brand you are tracking — drives all keyword colour coding and insights"
+               oninput="syncProjectName()">
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-bottom:6px;">
+      <div>
+        <label>Project / Client Name</label>
+        <input type="text" id="projectName" placeholder="Name for this project or client — used as the dashboard title">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:9px;font-size:13px;
+                      font-weight:600;color:#475569;cursor:pointer;">
+          <input type="checkbox" id="sameAsBrand" onchange="syncProjectName()"
+                 style="width:16px;height:16px;accent-color:#367588;cursor:pointer;">
+          Client name is the same as the brand
+        </label>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;">Or Load a Saved Profile</h3>
+    <div id="profileListStep1" class="profile-list">
+      <div class="empty-state">Loading profiles…</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(2)">Next: Geographies →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 2 — Geography Setup ══ -->
+<div class="page" id="step2">
+  <div class="card">
+    <h2>Geography Setup</h2>
+    <p class="sub">Add one or more geographies. Each has its own Amazon domain, pincode, and result cap.</p>
+    <div id="geoContainer"></div>
+    <button class="btn btn-outline" onclick="addGeo()">+ Add Geography</button>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Next: Keywords →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 3 — Keywords ══ -->
+<div class="page" id="step3">
+  <div class="card">
+    <h2>Keywords</h2>
+    <p class="sub">Add keywords for each geography — type manually, paste a list, or upload a CSV.</p>
+    <div id="kwContainer"></div>
+    <hr class="divider">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;">Save as Profile</h3>
+    <div class="form-row cols2">
+      <div>
+        <label>Profile Name</label>
+        <input type="text" id="profileSaveName" placeholder="A name to save and reload this configuration later">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn btn-success" onclick="saveProfile()">Save Profile</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="saveConfigAndGo()">Save &amp; Run Scrape →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 4 — Run Scrape ══ -->
+<div class="page" id="step4">
+  <div class="card">
+    <h2>Run Scrape</h2>
+    <p class="sub">Hit Start to begin. The progress bar updates live every second.</p>
+    <div style="margin-top:24px;">
+      <button class="btn btn-cta" id="startBtn" onclick="startScrape()" style="font-size:15px;padding:12px 32px;">
+        ▶ START SCRAPE
+      </button>
+    </div>
+
+    <!-- Daily auto-scrape scheduler -->
+    <div style="margin-top:22px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;
+                display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;">
+        <input type="checkbox" id="schedEnabled" onchange="saveSchedule()" style="width:18px;height:18px;accent-color:#367588;cursor:pointer;">
+        <span style="font-size:14px;font-weight:700;color:#1e293b;">Daily auto-scrape</span>
+      </label>
+      <input type="time" id="schedTime" value="09:00" onchange="saveSchedule()"
+             style="padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:inherit;">
+      <span style="font-size:12px;color:#64748b;" id="schedStatus">Runs on the server — your laptop can be off.</span>
+    </div>
+    <div id="progressSection" style="display:none;margin-top:28px;">
+      <div id="progress-msg">Starting…</div>
+      <div id="progress-sub-msg"></div>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+      </div>
+      <div id="etaRow" style="display:none;align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;">
+        <div id="etaDisplay" style="font-size:13px;font-weight:700;color:#374151;background:#f1f5f9;
+          padding:6px 14px;border-radius:99px;border:1px solid #e2e8f0;">⏱ Estimating time…</div>
+        <div id="elapsedDisplay" style="font-size:12px;color:#6b7280;">Elapsed: 0m 0s</div>
+        <div id="spinnerDot" style="width:10px;height:10px;border-radius:50%;background:#367588;
+          animation:pulse 1.2s infinite ease-in-out;flex-shrink:0;"></div>
+      </div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:4px;" id="progressCount"></div>
+      <div class="progress-stats">
+        <div class="pstat sp"  ><div class="val" id="pSP">0</div><div class="lbl">Sponsored (SP)</div></div>
+        <div class="pstat org" ><div class="val" id="pOrg">0</div><div class="lbl">Organic</div></div>
+        <div class="pstat sb"  ><div class="val" id="pSB">0</div><div class="lbl">Sponsored Brands</div></div>
+        <div class="pstat sbv" ><div class="val" id="pSBV">0</div><div class="lbl">SBV (Video)</div></div>
+        <div class="pstat skip"><div class="val" id="pSkip">0</div><div class="lbl">Skipped</div></div>
+      </div>
+      <div id="progress-done-msg">✓ Scrape complete! Go to Dashboard →</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" id="dashBtn" onclick="loadDashboard();goStep(5)" style="display:none;">
+        View Dashboard →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 5 — Dashboard ══ -->
+<div class="page" id="step5">
+  <div class="dash-header">
+    <div>
+      <div class="dash-title" id="dashProjectName">—</div>
+      <div class="dash-meta"  id="dashMeta">Last scraped: —</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div id="dashBrandBadge" style="display:none;background:rgba(255,255,255,0.2);color:#fff;
+           padding:4px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.4);"></div>
+      <button class="btn btn-sm" id="refreshBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);" onclick="rescrapeAndRefresh()">⟳ Re-scrape</button>
+      <button class="btn btn-sm" style="background:var(--accent);color:#fff;border:none;font-weight:600;" onclick="goStep(1)">← New Scrape</button>
+    </div>
+  </div>
+  <!-- Inline re-scrape progress bar -->
+  <div id="dashRescrapeBar" style="display:none;background:var(--secondary);padding:10px 28px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div id="dashRescrapeMsg" style="font-size:13px;font-weight:600;color:var(--primary);">Re-scraping…</div>
+      <div style="flex:1;min-width:120px;background:#fff;border-radius:99px;height:8px;overflow:hidden;">
+        <div id="dashRescrapeProgress" style="height:100%;background:var(--primary);border-radius:99px;width:0%;transition:width .5s ease;"></div>
+      </div>
+      <div id="dashRescrapeKw" style="font-size:12px;color:var(--gray);white-space:nowrap;"></div>
+    </div>
+  </div>
+
+  <div class="dash-body">
+    <label style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.05em;margin-bottom:6px;display:block;">GEOGRAPHY</label>
+    <div class="tab-bar" id="geoTabs"></div>
+    <label style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.05em;margin-bottom:6px;display:block;">KEYWORD</label>
+    <div class="tab-bar" id="kwTabs"></div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card total" ><div class="kpi-val" id="kTotal">—</div><div class="kpi-lbl">Total Results</div></div>
+      <div class="kpi-card sp"    ><div class="kpi-val" id="kSP">—</div>   <div class="kpi-lbl">Sponsored (SP)</div></div>
+      <div class="kpi-card org"   ><div class="kpi-val" id="kOrg">—</div>  <div class="kpi-lbl">Organic</div></div>
+      <div class="kpi-card sb"    ><div class="kpi-val" id="kSB">—</div>   <div class="kpi-lbl">SB Placements</div></div>
+      <div class="kpi-card sbv"   ><div class="kpi-val" id="kSBV">—</div>  <div class="kpi-lbl">SBV Placements</div></div>
+      <div class="kpi-card brands"><div class="kpi-val" id="kBrands">—</div><div class="kpi-lbl">Unique Brands</div></div>
+    </div>
+
+    <!-- Changes since last scrape -->
+    <div class="chart-card" style="margin-bottom:24px;display:none;" id="changesSection">
+      <h3>What Changed <span id="changesMeta" style="font-size:11px;font-weight:600;color:#94a3b8;"></span></h3>
+      <div id="changesFeed" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- Compare against a past run -->
+    <div class="chart-card" style="margin-bottom:24px;" id="compareSection">
+      <h3>Compare With a Past Run</h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+        <select id="compareSelect" style="max-width:320px;padding:8px 12px;">
+          <option value="">Select a past run…</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="runCompare()">Compare</button>
+        <span id="compareMeta" style="font-size:12px;color:#94a3b8;"></span>
+      </div>
+      <div id="compareResults" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- Brand Insights -->
+    <div class="insights-section" id="insightsSection" style="display:none;">
+      <div class="section-title" id="insightsTitle">Brand Insights &amp; Actions</div>
+      <div id="insightsContent"></div>
+    </div>
+
+    <!-- Brand chart — full width -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <h3>Brand Presence — SP vs Organic (Top 15)</h3>
+      <div style="position:relative;height:260px;"><canvas id="brandChart"></canvas></div>
+    </div>
+
+    <!-- Top 5 Spotlight (shown for single keyword) -->
+    <div id="spotlightSection" class="spotlight-section" style="display:none;">
+      <h3>Top 5 Spotlight</h3>
+      <div class="spotlight-row" id="spotlightRow"></div>
+    </div>
+
+    <!-- Ranked Results (shown for single keyword) -->
+    <div id="rankedSection" class="ranked-section" style="display:none;">
+      <h3>Ranked Results <span id="rankedKwLabel" style="font-weight:400;color:var(--gray);font-size:12px;"></span></h3>
+      <div id="rankedList"></div>
+    </div>
+
+    <!-- SB/SBV section — only rendered when data is found -->
+    <div class="sb-section" id="sbSection" style="display:none;">
+      <div class="section-title">Sponsored Brands &amp; SBV Placements</div>
+      <div id="sbContent"></div>
+    </div>
+
+    <!-- Full Results table (all keywords view) -->
+    <div id="resultsSection" class="results-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="section-title" style="margin-bottom:0;border-bottom:none;">Full Results</div>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+      </div>
+      <div class="filter-row">
+        <input type="text"   id="fSearch" placeholder="Search title / brand / ASIN…" oninput="debouncedFilter()">
+        <select id="fType"   onchange="applyFilter()">
+          <option value="">All Types</option>
+          <option value="SPONSORED">Sponsored (SP)</option>
+          <option value="ORGANIC">Organic</option>
+        </select>
+        <select id="fBrand"  onchange="applyFilter()">
+          <option value="">All Brands</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Geo</th><th>Keyword</th><th>Brand</th><th>Title</th><th>Price</th><th>Type</th><th>ASIN</th></tr></thead>
+          <tbody id="resultsTbody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="pg-info" id="pgInfo"></div>
+        <button class="pg-btn" id="pgPrev" onclick="changePage(-1)">← Prev</button>
+        <span id="pgNums" style="display:flex;gap:4px;"></span>
+        <button class="pg-btn" id="pgNext" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Toast ══ -->
+<div class="toast hide" id="toast"></div>
+
+<script>
+'use strict';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+const state = {
+  project:  '',
+  brand:    '',
+  geos:     [],   // [{name,domain,pincode,cap}]
+  keywords: {},   // {geoName:[kw,…]}
+  profiles: {},
+};
+let dashData     = {};
+let dashBrand    = '';
+let activeGeo    = null;
+let activeKw     = '__all__';
+let brandChart   = null;
+let donutChart   = null;
+let pollTimer      = null;
+let scrapeStartTime = null;
+let allRows        = [];
+let filteredRows = [];
+let currentPage  = 1;
+const PAGE_SIZE  = 50;
+let filterTimer  = null;
+
+// ─── Toast helper ──────────────────────────────────────────────────────────────
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hide');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.add('hide'), duration);
+}
+
+// ─── HTML escape ──────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function trunc(s, n) {
+  s = String(s ?? '');
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+// ─── Brand matching (case-insensitive partial) ────────────────────────────────
+function brandMatch(brand, resultBrand) {
+  if (!brand || !resultBrand) return false;
+  return resultBrand.toLowerCase().includes(brand.toLowerCase());
+}
+
+// ─── Step navigation ──────────────────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  document.querySelectorAll('.step-item').forEach(el => {
+    const s = +el.dataset.step;
+    el.classList.toggle('active', s === n);
+    el.classList.toggle('done',   s < n);
+  });
+  for (let i = 1; i <= 4; i++) {
+    const c = document.getElementById('con' + i);
+    if (c) c.classList.toggle('done', i < n);
+  }
+  if (n === 2) renderGeos();
+  if (n === 3) renderKeywords();
+  if (n === 5) loadDashboard();
+}
+
+// ─── Profiles ─────────────────────────────────────────────────────────────────
+async function loadProfiles() {
+  state.profiles = await fetch('/api/profiles').then(r => r.json());
+  renderProfileList();
+}
+
+function renderProfileList() {
+  const el    = document.getElementById('profileListStep1');
+  const names = Object.keys(state.profiles);
+  if (!names.length) { el.innerHTML = '<div class="empty-state">No saved profiles yet.</div>'; return; }
+  el.innerHTML = names.map(name => {
+    const p        = state.profiles[name];
+    const geoCount = Object.keys(p.geographies || {}).length;
+    const kwCount  = Object.values(p.geographies || {}).reduce((a,g) => a + (g.keywords||[]).length, 0);
+    const brandStr = p.brand ? ` · ${esc(p.brand)}` : '';
+    const safeId   = 'prof-' + btoa(encodeURIComponent(name)).replace(/[^a-zA-Z0-9]/g,'');
+    return `<div class="profile-item" id="${safeId}">
+      <div>
+        <div class="profile-name">${esc(name)}</div>
+        <div class="profile-meta">${geoCount} geo(s) · ${kwCount} keyword(s)${brandStr}</div>
+      </div>
+      <div style="display:flex;gap:8px;" id="${safeId}-btns">
+        <button class="btn btn-outline btn-sm" data-profile="${esc(name)}" onclick="loadProfile(this.dataset.profile)">Load</button>
+        <button class="btn btn-danger btn-sm" data-profile="${esc(name)}" data-safeid="${safeId}" onclick="confirmDelete(this.dataset.safeid, this.dataset.profile)">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function confirmDelete(safeId, name) {
+  const btns = document.getElementById(safeId + '-btns');
+  if (!btns) return;
+  // Store name in dataset to avoid quoting issues with JSON.stringify in onclick
+  btns.innerHTML = `<span style="font-size:12px;color:var(--gray);margin-right:4px;">Remove?</span>
+    <button class="btn btn-danger btn-sm" data-profile="${esc(name)}" onclick="deleteProfile(this.dataset.profile)">Yes</button>
+    <button class="btn btn-ghost btn-sm" onclick="renderProfileList()">No</button>`;
+}
+
+function loadProfile(name) {
+  const p = state.profiles[name];
+  if (!p) { showToast('Profile not found'); return; }
+  document.getElementById('projectName').value     = p.project || name;
+  document.getElementById('brandName').value       = p.brand   || '';
+  document.getElementById('profileSaveName').value = name;
+  state.brand    = p.brand || '';
+  state.geos     = [];
+  state.keywords = {};
+  for (const [geoName, gc] of Object.entries(p.geographies || {})) {
+    const loadedGeo = { name:geoName, domain:gc.domain, pincode:String(gc.pincode||''), cap:gc.cap||40 };
+    if (gc.pages) loadedGeo.pages = gc.pages;
+    state.geos.push(loadedGeo);
+    state.keywords[geoName] = [...(gc.keywords || [])];
+  }
+  showToast(`"${name}" loaded — click Next to continue`);
+}
+
+async function deleteProfile(name) {
+  await fetch('/api/profiles/' + encodeURIComponent(name), { method:'DELETE' });
+  await loadProfiles();
+  showToast('Profile deleted');
+}
+
+async function saveProfile() {
+  const name = document.getElementById('profileSaveName').value.trim();
+  if (!name) { showToast('Enter a profile name first'); return; }
+  flushAllInputs();
+  collectKeywordState();
+  const profile = buildConfigPayload();
+  await fetch('/api/profiles', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, profile })
+  });
+  await loadProfiles();
+  showToast(`Profile "${name}" saved!`);
+}
+
+// ─── Geo management ───────────────────────────────────────────────────────────
+let geoCounter = 0;
+const DOMAINS = [
+  'amazon.in','amazon.com','amazon.co.uk','amazon.de','amazon.fr',
+  'amazon.it','amazon.es','amazon.com.au','amazon.ca','amazon.co.jp',
+  'amazon.ae','amazon.sa','amazon.com.mx','amazon.com.br','amazon.nl',
+  'amazon.sg','amazon.com.tr','amazon.pl','amazon.se'
+];
+
+function addGeo(preset) {
+  geoCounter++;
+  const id      = 'geo-' + geoCounter;
+  const name    = preset?.name    ?? '';
+  const domain  = preset?.domain  ?? 'amazon.in';
+  const pincode = preset?.pincode ?? '';
+  const cap     = preset?.cap     ?? 40;
+  const pages   = preset?.pages   ?? null;
+  const depthMode = pages ? 'pages' : 'positions';
+  const depthVal  = pages ? pages : cap;
+  const opts    = DOMAINS.map(d => `<option value="${d}"${d===domain?' selected':''}>${d}</option>`).join('');
+  const block   = document.createElement('div');
+  block.className = 'geo-block';
+  block.id = id;
+  block.innerHTML = `
+    <div class="geo-title">Geography #${geoCounter}</div>
+    <button class="btn btn-danger btn-sm remove-geo" onclick="removeGeo('${id}')">✕ Remove</button>
+    <div class="form-row cols4">
+      <div><label>Geo Name</label>
+           <input type="text" class="geo-name" value="${esc(name)}" placeholder="Label for this market (India, UAE, US…)"></div>
+      <div><label>Amazon Domain</label>
+           <select class="geo-domain">${opts}</select></div>
+      <div><label>Pincode / Zip</label>
+           <input type="text" class="geo-pincode" value="${esc(pincode)}" placeholder="Delivery pincode for location results"></div>
+      <div><label>Search Depth
+             <span style="font-weight:400;color:#94a3b8;cursor:help;"
+                   title="Amazon serves ~40–60 products per page. POSITIONS mode: capture organic results down to that position (sponsored ads are ALWAYS captured in full on every visited page — they never count against the depth). PAGES mode: scrape N whole pages — everything on them, ads and organics. Every visited page also gets its own SB/SBV banner sweep, so deeper = more ROS banner coverage.">ⓘ</span>
+           </label>
+           <div style="display:flex;gap:6px;">
+             <select class="geo-depth-mode" style="max-width:110px;">
+               <option value="positions"${depthMode==='positions'?' selected':''}>Positions</option>
+               <option value="pages"${depthMode==='pages'?' selected':''}>Pages</option>
+             </select>
+             <input type="number" class="geo-cap" value="${depthVal}" min="1" max="200" style="flex:1;">
+           </div>
+           <div style="font-size:10.5px;color:#94a3b8;margin-top:4px;">~40–60 products per page · ads always captured in full</div></div>
+    </div>`;
+  document.getElementById('geoContainer').appendChild(block);
+}
+
+function removeGeo(id) {
+  document.getElementById(id)?.remove();
+}
+
+function collectGeoState() {
+  const blocks = document.querySelectorAll('.geo-block');
+  if (!blocks.length) return;
+  state.geos = [];
+  blocks.forEach(b => {
+    const name    = b.querySelector('.geo-name').value.trim();
+    const domain  = b.querySelector('.geo-domain').value;
+    const pincode = b.querySelector('.geo-pincode').value.trim();
+    const mode    = b.querySelector('.geo-depth-mode')?.value || 'positions';
+    const num     = parseInt(b.querySelector('.geo-cap').value) || 40;
+    if (!name) return;
+    if (mode === 'pages') {
+      // pages mode: N whole pages; cap becomes a generous safety ceiling
+      state.geos.push({ name, domain, pincode, cap: Math.min(num, 5) * 100, pages: Math.min(num, 5) });
+    } else {
+      state.geos.push({ name, domain, pincode, cap: num });
+    }
+  });
+}
+
+function renderGeos() {
+  document.getElementById('geoContainer').innerHTML = '';
+  geoCounter = 0;
+  if (state.geos.length === 0) { addGeo(); }
+  else { state.geos.forEach(g => addGeo(g)); }
+}
+
+// ─── Keyword management ───────────────────────────────────────────────────────
+function sanitizeId(s) { return s.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+function flushAllInputs() {
+  document.querySelectorAll('.kw-input').forEach(inp => {
+    const val     = inp.value.trim();
+    const section = inp.closest('.kw-section');
+    if (val && section) {
+      const geo    = section.dataset.geo;
+      const listEl = document.getElementById('kwlist-' + sanitizeId(geo));
+      if (listEl) {
+        const exists = [...listEl.querySelectorAll('.kw-tag')].some(t => t.dataset.kw === val);
+        if (!exists) {
+          const span = document.createElement('span');
+          span.className  = 'kw-tag';
+          span.dataset.kw = val;
+          span.innerHTML  = `${esc(val)} <span class="rm" onclick="removeKwEl(this)">×</span>`;
+          listEl.appendChild(span);
+        }
+        inp.value = '';
+      }
+    }
+  });
+}
+
+function collectKeywordState() {
+  document.querySelectorAll('.kw-section').forEach(sec => {
+    const geo  = sec.dataset.geo;
+    const tags = [...sec.querySelectorAll('.kw-tag')].map(t => t.dataset.kw);
+    state.keywords[geo] = tags;
+  });
+}
+
+function renderKeywords() {
+  collectGeoState();
+  const container = document.getElementById('kwContainer');
+  container.innerHTML = '';
+  if (!state.geos.length) {
+    container.innerHTML = '<div class="empty-state">No geographies set. Go back to step 2.</div>';
+    return;
+  }
+  state.geos.forEach(g => {
+    const existing = state.keywords[g.name] || [];
+    const sid      = sanitizeId(g.name);
+    const sec = document.createElement('div');
+    sec.className   = 'kw-section';
+    sec.dataset.geo = g.name;
+    sec.innerHTML   = `
+      <h4>${esc(g.name)} <span class="text-gray" style="font-weight:400;font-size:12px;">(${esc(g.domain)})</span></h4>
+
+      <!-- Manual input -->
+      <div class="kw-input-row" style="margin-bottom:6px;">
+        <input type="text" class="kw-input" placeholder="Type a keyword and press Enter or Add"
+               onkeydown="if(event.key==='Enter'){addKwFromInput(this);}">
+        <button class="btn btn-outline btn-sm" onclick="addKwFromInput(this.previousElementSibling)">Add</button>
+      </div>
+
+      <!-- Bulk options -->
+      <div class="kw-bulk-row">
+        <div>
+          <div class="kw-bulk-label">Paste a list (one per line)</div>
+          <textarea class="kw-bulk-paste" rows="4"
+            placeholder="running shoes&#10;sports shoes&#10;training shoes"
+            style="resize:vertical;font-family:inherit;font-size:13px;"></textarea>
+          <button class="btn btn-ghost btn-sm" style="margin-top:6px;"
+            onclick="addBulkFromPaste(this)">Add from list</button>
+        </div>
+        <div>
+          <div class="kw-bulk-label">Upload CSV file</div>
+          <div style="border:1px dashed var(--border);border-radius:6px;padding:16px;text-align:center;cursor:pointer;"
+               onclick="document.getElementById('csvInput-${sid}').click()">
+            <div style="font-size:12px;color:var(--gray);margin-bottom:6px;">Click to choose a CSV</div>
+            <div style="font-size:11px;color:var(--gray);">One keyword per row, first column used</div>
+          </div>
+          <input type="file" id="csvInput-${sid}" accept=".csv,.txt" style="display:none;"
+                 onchange="addFromCsv(this, '${esc(g.name)}')">
+          <div id="csvStatus-${sid}" style="font-size:11px;color:var(--green);margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <!-- Tag list -->
+      <div style="margin-top:10px;">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:5px;font-weight:600;">Added keywords</div>
+        <div class="kw-list" id="kwlist-${sid}">
+          ${existing.map(k => kwTagHTML(k)).join('')}
+        </div>
+      </div>`;
+    container.appendChild(sec);
+  });
+}
+
+function kwTagHTML(kw) {
+  return `<span class="kw-tag" data-kw="${esc(kw)}">${esc(kw)} <span class="rm" onclick="removeKwEl(this)">×</span></span>`;
+}
+
+function addKwFromInput(inp) {
+  const val     = inp.value.trim();
+  if (!val) return;
+  const section = inp.closest('.kw-section');
+  if (!section) return;
+  const geo     = section.dataset.geo;
+  const listEl  = document.getElementById('kwlist-' + sanitizeId(geo));
+  if (!listEl) return;
+  if ([...listEl.querySelectorAll('.kw-tag')].some(t => t.dataset.kw === val)) {
+    inp.value = ''; return;
+  }
+  const span = document.createElement('span');
+  span.className  = 'kw-tag';
+  span.dataset.kw = val;
+  span.innerHTML  = `${esc(val)} <span class="rm" onclick="removeKwEl(this)">×</span>`;
+  listEl.appendChild(span);
+  inp.value = '';
+}
+
+function addBulkFromPaste(btn) {
+  const section  = btn.closest('.kw-section');
+  if (!section) return;
+  const textarea = section.querySelector('.kw-bulk-paste');
+  const geo      = section.dataset.geo;
+  const listEl   = document.getElementById('kwlist-' + sanitizeId(geo));
+  if (!textarea || !listEl) return;
+  const lines    = textarea.value.split('\n').map(l => l.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach(kw => {
+    if ([...listEl.querySelectorAll('.kw-tag')].some(t => t.dataset.kw === kw)) return;
+    const span = document.createElement('span');
+    span.className  = 'kw-tag';
+    span.dataset.kw = kw;
+    span.innerHTML  = `${esc(kw)} <span class="rm" onclick="removeKwEl(this)">×</span>`;
+    listEl.appendChild(span);
+    added++;
+  });
+  textarea.value = '';
+  showToast(`Added ${added} keyword${added !== 1 ? 's' : ''}`);
+}
+
+function addFromCsv(input, geoName) {
+  const file = input.files[0];
+  if (!file) return;
+  const sid    = sanitizeId(geoName);
+  const listEl = document.getElementById('kwlist-' + sid);
+  const status = document.getElementById('csvStatus-' + sid);
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text  = e.target.result;
+    const lines = text.split('\n').map(l => {
+      // Take first column, strip quotes and whitespace
+      return l.split(',')[0].replace(/^["']|["']$/g, '').trim();
+    }).filter(Boolean);
+    let added = 0;
+    lines.forEach(kw => {
+      if (!kw) return;
+      if (kw.toLowerCase() === 'keyword' || kw.toLowerCase() === 'keywords') return; // skip header
+      if ([...listEl.querySelectorAll('.kw-tag')].some(t => t.dataset.kw === kw)) return;
+      const span = document.createElement('span');
+      span.className  = 'kw-tag';
+      span.dataset.kw = kw;
+      span.innerHTML  = `${esc(kw)} <span class="rm" onclick="removeKwEl(this)">×</span>`;
+      listEl.appendChild(span);
+      added++;
+    });
+    if (status) status.textContent = `✓ ${added} keyword${added !== 1 ? 's' : ''} added from CSV`;
+    input.value = '';
+    showToast(`Added ${added} keywords from ${file.name}`);
+  };
+  reader.readAsText(file);
+}
+
+function removeKwEl(rmBtn) {
+  rmBtn.closest('.kw-tag')?.remove();
+}
+
+// ─── Config build & save ──────────────────────────────────────────────────────
+function buildConfigPayload() {
+  const project     = document.getElementById('projectName').value.trim() || 'My Project';
+  const brand       = document.getElementById('brandName').value.trim();
+  const geographies = {};
+  state.geos.forEach(g => {
+    geographies[g.name] = {
+      domain:   g.domain,
+      pincode:  g.pincode,
+      cap:      g.cap,
+      keywords: state.keywords[g.name] || [],
+    };
+  });
+  return { project, brand, geographies };
+}
+
+async function saveConfigAndGo() {
+  flushAllInputs();
+  collectGeoState();
+  collectKeywordState();
+  const cfg = buildConfigPayload();
+
+  const totalKw = Object.values(cfg.geographies).reduce((a, g) => a + g.keywords.length, 0);
+  if (!totalKw) { showToast('Add at least one keyword before running'); return; }
+
+  await fetch('/api/config', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(cfg)
+  });
+  showToast('Config saved — ready to scrape');
+  goStep(4);
+}
+
+// ─── Scrape & progress ────────────────────────────────────────────────────────
+async function startScrape() {
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('progressSection').style.display = 'block';
+  document.getElementById('progress-done-msg').style.display = 'none';
+  document.getElementById('dashBtn').style.display = 'none';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progress-sub-msg').textContent = '';
+  document.getElementById('etaRow').style.display         = 'flex';
+  document.getElementById('spinnerDot').style.display     = 'block';
+  document.getElementById('etaDisplay').textContent       = '⏱ Starting…';
+  document.getElementById('elapsedDisplay').textContent   = 'Elapsed: 0m 0s';
+  scrapeStartTime = Date.now();
+  const res  = await fetch('/api/scrape', { method:'POST' });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    showToast(body.message || 'Could not start scrape');
+    document.getElementById('startBtn').disabled = false;
+    // keep polling — if a real scrape is running, its progress shows below
+  }
+  pollProgress();
+}
+
+function pollProgress() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    const p   = await fetch('/api/progress').then(r => r.json());
+    const pct = p.total_keywords
+      ? Math.min(100, Math.round((p.keyword_index / p.total_keywords) * 100))
+      : 0;
+    document.getElementById('progressBar').style.width  = pct + '%';
+    document.getElementById('progress-msg').textContent = p.message || '';
+    document.getElementById('progress-sub-msg').textContent = p.sub_message || '';
+    document.getElementById('progressCount').textContent =
+      p.total_keywords ? `Keyword ${p.keyword_index} / ${p.total_keywords}` : '';
+    document.getElementById('pSP').textContent   = p.sp      || 0;
+    document.getElementById('pOrg').textContent  = p.organic || 0;
+    document.getElementById('pSB').textContent   = p.sb      || 0;
+    document.getElementById('pSBV').textContent  = p.sbv     || 0;
+    document.getElementById('pSkip').textContent = p.skipped || 0;
+
+    if (scrapeStartTime) {
+      const elapsedMs  = Date.now() - scrapeStartTime;
+      const elapsedSec = Math.floor(elapsedMs / 1000);
+      document.getElementById('elapsedDisplay').textContent =
+        `Elapsed: ${Math.floor(elapsedSec/60)}m ${elapsedSec%60}s`;
+      const done  = p.keyword_index  || 0;
+      const total = p.total_keywords || 0;
+      if (done > 0 && total > 0 && done < total) {
+        const remSec = Math.floor(((elapsedMs / done) * (total - done)) / 1000);
+        document.getElementById('etaDisplay').textContent =
+          `⏱ ~${Math.floor(remSec/60)}m ${remSec%60}s remaining  (${pct}% done)`;
+      } else if (done === 0) {
+        document.getElementById('etaDisplay').textContent = '⏱ Estimating time…';
+      }
+    }
+
+    if (p.status === 'done' || p.status === 'error') {
+      clearInterval(pollTimer);
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('spinnerDot').style.display = 'none';
+      if (scrapeStartTime) {
+        const totalMs = Date.now() - scrapeStartTime;
+        document.getElementById('elapsedDisplay').textContent =
+          `Total time: ${Math.floor(totalMs/60000)}m ${Math.floor((totalMs%60000)/1000)}s`;
+        document.getElementById('etaDisplay').textContent =
+          p.status === 'done' ? '✓ Complete!' : '✗ Error';
+      }
+      if (p.status === 'done') {
+        document.getElementById('progress-msg').textContent     = p.message || 'Scrape complete!';
+        document.getElementById('progress-sub-msg').textContent = '';
+        document.getElementById('progress-done-msg').style.display = 'block';
+        document.getElementById('dashBtn').style.display        = 'inline-flex';
+      } else {
+        document.getElementById('progress-msg').textContent = 'Error: ' + (p.message || 'unknown');
+        // Pull the scrape log so the reason is visible right in the UI
+        fetch('/api/scrape-log').then(r => r.json()).then(d => {
+          if (d.log) {
+            const tail = d.log.trim().split('\n').slice(-4).join(' · ');
+            document.getElementById('progress-sub-msg').textContent = tail.slice(0, 300);
+          }
+        }).catch(() => {});
+      }
+      document.getElementById('startBtn').disabled = false;
+    }
+  }, 1000);
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [data, cfg] = await Promise.all([
+    fetch('/api/data').then(r => r.json()),
+    fetch('/api/config').then(r => r.json()),
+  ]);
+  dashData  = data;
+  dashBrand = cfg.brand || '';
+  loadInsights();        // changes feed — renders when ready
+  loadCompareOptions();  // populate past-run dropdown
+
+  document.getElementById('dashProjectName').textContent = cfg.project || 'Dashboard';
+  document.getElementById('dashMeta').textContent = 'Loaded: ' + new Date().toLocaleString();
+
+  // Show brand badge in header
+  const badge = document.getElementById('dashBrandBadge');
+  if (dashBrand) {
+    badge.style.display = 'block';
+    badge.textContent   = '🎯 Tracking: ' + dashBrand;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  const geos = Object.keys(dashData);
+  if (!geos.length) {
+    document.getElementById('insightsSection').style.display = 'none';
+    return;
+  }
+  activeGeo = geos[0];
+  activeKw  = '__all__';
+  renderGeoTabs(geos);
+  renderKwTabs();
+  renderDash();
+}
+
+function renderGeoTabs(geos) {
+  document.getElementById('geoTabs').innerHTML = geos.map(g =>
+    `<button class="tab-btn${g===activeGeo?' active':''}" data-geo="${esc(g)}" onclick="switchGeo(this.dataset.geo)">${esc(g)}</button>`
+  ).join('');
+}
+
+function switchGeo(geo) {
+  activeGeo = geo;
+  activeKw  = '__all__';
+  document.querySelectorAll('#geoTabs .tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.geo === geo));
+  renderKwTabs();
+  renderDash();
+}
+
+// ─── Keyword tabs with brand colour coding ────────────────────────────────────
+function getBrandPresence(kw) {
+  if (!dashBrand) return 'none';
+  const geoData  = dashData[activeGeo] || {};
+  const spResult = (geoData[kw]?.results || []).filter(r => r.type === 'SPONSORED' && brandMatch(dashBrand, r.brand));
+  if (!spResult.length) return 'absent';
+  const minPos   = Math.min(...spResult.map(r => r.position));
+  return minPos <= 4 ? 'tos' : 'present';
+}
+
+function renderKwTabs() {
+  const geoData = dashData[activeGeo] || {};
+  const kws     = Object.keys(geoData);
+  let html = `<button class="tab-btn${activeKw==='__all__'?' active':''}" onclick="switchKw('__all__')">All Keywords</button>`;
+
+  kws.forEach(k => {
+    const presence = getBrandPresence(k);
+    let colorCls = '';
+    let dotColor = '';
+    let dotHtml  = '';
+    if (dashBrand) {
+      if (presence === 'tos')     { colorCls = 'kw-green';  dotColor = '#16a34a'; }
+      else if (presence === 'present') { colorCls = 'kw-yellow'; dotColor = '#d97706'; }
+      else                        { colorCls = 'kw-red';    dotColor = '#dc2626'; }
+      dotHtml = `<span class="kw-dot" style="background:${dotColor};"></span>`;
+    }
+    const isActive = k === activeKw;
+    html += `<button class="tab-btn ${colorCls}${isActive ? ' active' : ''}" data-kw="${esc(k)}" onclick="switchKw(this.dataset.kw)">${dotHtml}${esc(k)}</button>`;
+  });
+
+  // Add legend if brand is set
+  if (dashBrand && kws.length) {
+    html += `<div style="display:flex;gap:14px;margin-left:8px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block;"></span> TOS (pos 1–4)</span>
+      <span style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#d97706;display:inline-block;"></span> Present, not TOS</span>
+      <span style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;"></span> Not visible</span>
+    </div>`;
+  }
+
+  document.getElementById('kwTabs').innerHTML = html;
+}
+
+function switchKw(kw) {
+  activeKw = kw;
+  renderKwTabs();
+  renderDash();
+}
+
+// ─── Collect active data ───────────────────────────────────────────────────────
+function getActiveResults() {
+  const geoData = dashData[activeGeo] || {};
+  if (activeKw !== '__all__') {
+    return (geoData[activeKw]?.results || []).map(r => ({...r, _geo:activeGeo, _kw:activeKw}));
+  }
+  const out = [];
+  for (const [kw, kwData] of Object.entries(geoData)) {
+    (kwData.results || []).forEach(r => out.push({...r, _geo:activeGeo, _kw:kw}));
+  }
+  return out;
+}
+
+function getActiveSB() {
+  const geoData = dashData[activeGeo] || {};
+  const kws = activeKw === '__all__' ? Object.keys(geoData) : [activeKw];
+  const out = [];
+  kws.forEach(kw => (geoData[kw]?.sb_placements || []).forEach(p => out.push({...p, _kw:kw})));
+  return out;
+}
+
+// ─── Main render ──────────────────────────────────────────────────────────────
+function renderDash() {
+  const results = getActiveResults();
+  const sb      = getActiveSB();
+
+  const sp     = results.filter(r => r.type === 'SPONSORED').length;
+  const org    = results.filter(r => r.type === 'ORGANIC').length;
+  const sbCnt  = sb.filter(p => p.type === 'SB').length;
+  const sbvCnt = sb.filter(p => p.type === 'SBV').length;
+  const brands = new Set(results.map(r => r.brand).filter(Boolean));
+  countUp(document.getElementById('kTotal'),  results.length);
+  countUp(document.getElementById('kSP'),     sp);
+  countUp(document.getElementById('kOrg'),    org);
+  countUp(document.getElementById('kSB'),     sbCnt);
+  countUp(document.getElementById('kSBV'),    sbvCnt);
+  countUp(document.getElementById('kBrands'), brands.size);
+
+  renderBrandChart(results);
+  renderBrandInsights();
+  renderChanges();
+  renderCompare();
+
+  const isSingle = activeKw !== '__all__';
+  document.getElementById('spotlightSection').style.display = isSingle ? 'block' : 'none';
+  document.getElementById('rankedSection').style.display    = isSingle ? 'block' : 'none';
+  document.getElementById('resultsSection').style.display   = isSingle ? 'none'  : 'block';
+
+  if (isSingle) {
+    renderSpotlight(results);
+    renderRankedList(results);
+  } else {
+    renderResultsTable(results);
+  }
+
+  renderSBSection(sb);
+}
+
+// ─── Brand Insights ───────────────────────────────────────────────────────────
+function renderBrandInsights() {
+  const section = document.getElementById('insightsSection');
+  const content = document.getElementById('insightsContent');
+  const title   = document.getElementById('insightsTitle');
+
+  if (!dashBrand) { section.style.display = 'none'; return; }
+
+  const geoData = dashData[activeGeo] || {};
+  const kws     = activeKw === '__all__' ? Object.keys(geoData) : [activeKw];
+
+  if (!kws.length) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+  title.textContent     = `${dashBrand} — Brand Insights & Actions`;
+
+  const insights = [];
+  let sbCount    = 0;
+
+  kws.forEach(kw => {
+    const results  = geoData[kw]?.results  || [];
+    const sbPlaces = geoData[kw]?.sb_placements || [];
+
+    const spResults    = results.filter(r => r.type === 'SPONSORED');
+    const brandSP      = spResults.filter(r => brandMatch(dashBrand, r.brand));
+    const tosCompetitors = spResults
+      .filter(r => r.position <= 4 && !brandMatch(dashBrand, r.brand))
+      .map(r => r.brand || 'Unknown')
+      .filter((b, i, arr) => arr.indexOf(b) === i)
+      .slice(0, 2);
+
+    const hasBrandSB = sbPlaces.some(p => brandMatch(dashBrand, p.brand));
+    if (hasBrandSB) sbCount++;
+
+    if (brandSP.length) {
+      const minPos = Math.min(...brandSP.map(r => r.position));
+      if (minPos <= 4) {
+        insights.push({
+          color:     '#16a34a',
+          message:   `${dashBrand} is at TOS position ${minPos} for <strong>'${esc(kw)}'</strong> — holding first-layer visibility`,
+          action:    `Monitor bids to defend this TOS position — avoid underbidding`,
+          actionCls: 'action-maintain',
+        });
+      } else {
+        const comp = tosCompetitors.length ? tosCompetitors[0] : 'competitors';
+        const compStr = tosCompetitors.length
+          ? tosCompetitors.join(' and ') + ` are holding positions 1–4`
+          : `Competitors are holding positions 1–4`;
+        insights.push({
+          color:     '#d97706',
+          message:   `${dashBrand} is at position ${minPos} for <strong>'${esc(kw)}'</strong> — ${compStr}`,
+          action:    `Push bids higher on '${kw}' to outbid ${comp} for TOS`,
+          actionCls: 'action-outbid',
+        });
+      }
+    } else {
+      const topComp = tosCompetitors.length ? `${tosCompetitors[0]} is dominating TOS` : 'Competitors are filling all TOS slots';
+      insights.push({
+        color:     '#dc2626',
+        message:   `${dashBrand} has no SP presence for <strong>'${esc(kw)}'</strong> — ${topComp}`,
+        action:    `Push bids aggressively on '${kw}' — ${dashBrand} is getting zero TOS visibility`,
+        actionCls: 'action-launch',
+      });
+    }
+  });
+
+  // SB summary insight
+  if (sbCount > 0) {
+    insights.push({
+      color:     '#7c3aed',
+      message:   `${dashBrand} SB banner is live for ${sbCount} out of ${kws.length} keyword${kws.length > 1 ? 's' : ''}`,
+      action:    `Keep SB budgets healthy — banner is visible and driving brand awareness`,
+      actionCls: 'action-sb',
+    });
+  } else {
+    insights.push({
+      color:     '#7c3aed',
+      message:   `${dashBrand} has no SB presence across the selected keywords`,
+      action:    `Activate SB campaigns on these keywords to build brand visibility alongside SP`,
+      actionCls: 'action-sb',
+    });
+  }
+
+  content.innerHTML = insights.map(ins => `
+    <div class="insight-block">
+      <div class="insight-main">
+        <span class="insight-dot" style="background:${ins.color};"></span>
+        <span>${ins.message}</span>
+      </div>
+      <div class="insight-action ${ins.actionCls}">${ins.action}</div>
+    </div>
+  `).join('');
+}
+
+// ─── Brand bar chart ─────────────────────────────────────────────────────────
+function renderBrandChart(results) {
+  const map = {};
+  results.forEach(r => {
+    const b = r.brand || 'Unknown';
+    if (!map[b]) map[b] = {sp:0, org:0};
+    r.type === 'SPONSORED' ? map[b].sp++ : map[b].org++;
+  });
+  const sorted  = Object.entries(map).sort((a,b) => (b[1].sp+b[1].org)-(a[1].sp+a[1].org)).slice(0,15);
+  const labels  = sorted.map(e => e[0]);
+  const spVals  = sorted.map(e => e[1].sp);
+  const orgVals = sorted.map(e => e[1].org);
+
+  if (brandChart) {
+    brandChart.data.labels           = labels;
+    brandChart.data.datasets[0].data = spVals;
+    brandChart.data.datasets[1].data = orgVals;
+    brandChart.update('none');
+    return;
+  }
+  brandChart = new Chart(document.getElementById('brandChart'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Sponsored', data:spVals,  backgroundColor:'#f97316', borderRadius:3},
+        {label:'Organic',   data:orgVals, backgroundColor:'#22c55e', borderRadius:3},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:300 },
+      plugins:{ legend:{ position:'top', labels:{ font:{size:11}, boxWidth:12 } } },
+      scales:{
+        x:{ stacked:true, ticks:{ font:{size:10}, maxRotation:45 } },
+        y:{ stacked:true, ticks:{ font:{size:11} }, beginAtZero:true },
+      }
+    }
+  });
+}
+
+// ─── Donut ───────────────────────────────────────────────────────────────────
+function renderDonut(sp, org, sb, sbv) {
+  const vals = [sp, org, sb, sbv];
+  if (donutChart) {
+    donutChart.data.datasets[0].data = vals;
+    donutChart.update('none');
+    return;
+  }
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type:'doughnut',
+    data:{
+      labels:['Sponsored SP','Organic','SB','SBV'],
+      datasets:[{ data:vals, backgroundColor:['#f97316','#22c55e','#3b82f6','#8b5cf6'], borderWidth:2 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:300 },
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12, padding:10 } } },
+      cutout:'60%',
+    }
+  });
+}
+
+// ─── Top 5 Spotlight ─────────────────────────────────────────────────────────
+function renderSpotlight(results) {
+  const top5 = results.slice(0, 5);
+  const row  = document.getElementById('spotlightRow');
+  if (!top5.length) { row.innerHTML = '<div class="empty-state">No results</div>'; return; }
+  let html = '';
+  for (let i = 0; i < 5; i++) {
+    const r = top5[i];
+    if (!r) {
+      html += `<div class="spotlight-empty">Position ${i+1}<br>No data</div>`;
+    } else {
+      const badgeCls = r.type === 'SPONSORED' ? 'badge-sp' : 'badge-org';
+      const label    = r.type === 'SPONSORED' ? 'SP'       : 'Organic';
+      html += `<div class="spotlight-card">
+        <div class="spotlight-pos">${r.position}</div>
+        <span class="badge ${badgeCls}">${label}</span>
+        <div class="spotlight-brand">${esc(trunc(r.brand || '—', 18))}</div>
+        <div class="spotlight-title">${esc(trunc(r.title || '', 70))}</div>
+        <a class="spotlight-asin" href="${esc(r.url||'#')}" target="_blank" rel="noopener">${esc(r.asin||'—')}</a>
+      </div>`;
+    }
+  }
+  row.innerHTML = html;
+}
+
+// ─── Ranked list ─────────────────────────────────────────────────────────────
+function renderRankedList(results) {
+  document.getElementById('rankedKwLabel').textContent =
+    activeKw !== '__all__' ? `— ${activeKw}` : '';
+  const list = document.getElementById('rankedList');
+  if (!results.length) { list.innerHTML = '<div class="empty-state">No results</div>'; return; }
+  list.innerHTML = results.map(r => {
+    const badgeCls = r.type === 'SPONSORED' ? 'badge-sp' : 'badge-org';
+    const label    = r.type === 'SPONSORED' ? 'SP'       : 'Organic';
+    const posCls   = r.position <= 4 ? 'ranked-pos pos-top' : 'ranked-pos';
+    return `<div class="ranked-item">
+      <div class="${posCls}">${r.position}</div>
+      <span class="badge ${badgeCls}">${label}</span>
+      <div class="ranked-brand">${esc(r.brand||'—')}</div>
+      <div class="ranked-title" title="${esc(r.title||'')}">${esc(trunc(r.title||'—', 70))}</div>
+      <a class="ranked-asin" href="${esc(r.url||'#')}" target="_blank" rel="noopener">${esc(r.asin||'—')}</a>
+    </div>`;
+  }).join('');
+}
+
+// ─── SB/SBV section — only shown when data found ─────────────────────────────
+function renderSBSection(placements) {
+  const section = document.getElementById('sbSection');
+  const content = document.getElementById('sbContent');
+
+  if (!placements.length) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+
+  // Filter out Unknown brands — only show placements where brand is identified
+  const knownPlacements = placements.filter(p => p.brand && p.brand.toLowerCase() !== 'unknown');
+  if (!knownPlacements.length) { section.style.display = 'none'; return; }
+
+  const byKw = {};
+  knownPlacements.forEach(p => {
+    const kw = p._kw || '';
+    if (!byKw[kw]) byKw[kw] = [];
+    byKw[kw].push(p);
+  });
+
+  let html = `<div style="font-size:11.5px;color:#94a3b8;margin-bottom:12px;">
+    Shown in order of appearance on the search results — first chip = highest placement,
+    reading left to right down the page (then following pages).
+    <span style="color:#0d9488;font-weight:700;">TOS</span> = top of search (above results) ·
+    <span style="color:#64748b;font-weight:700;">ROS</span> = rest of search (mid/lower page).</div>`;
+  for (const [kw, pList] of Object.entries(byKw)) {
+    // preserve captured order: position within page, page after page
+    pList.sort((a, b) => (a.page || 1) - (b.page || 1) || (a.position || 0) - (b.position || 0));
+    html += `<div class="sb-keyword-group">
+      <div class="sb-keyword-label">${esc(kw)}</div>
+      <div class="sb-cards-row">`;
+    pList.forEach((p, idx) => {
+      const badgeCls = p.type === 'SBV' ? 'badge-sbv' : 'badge-sb';
+      const isTos    = p.placement === 'TOS';
+      const pageTag  = (p.page && p.page > 1) ? ` · p${p.page}` : '';
+      html += `<div class="sb-card" title="Placement #${idx+1} in order of appearance">
+        <span style="font-size:10px;font-weight:800;color:#cbd5e1;min-width:14px;">${idx+1}</span>
+        <span class="badge ${badgeCls}">${esc(p.type||'SB')}</span>
+        <div>
+          <div class="sb-card-brand">${esc(p.brand||'—')}</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.03em;
+               color:${isTos ? '#0d9488' : '#94a3b8'};">${esc(p.placement || 'ROS')}${pageTag}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+  content.innerHTML = html;
+}
+
+// ─── Full results table ───────────────────────────────────────────────────────
+function renderResultsTable(results) {
+  allRows = results;
+  const brands   = [...new Set(results.map(r=>r.brand).filter(Boolean))].sort();
+  const fBrand   = document.getElementById('fBrand');
+  const curBrand = fBrand.value;
+  fBrand.innerHTML = '<option value="">All Brands</option>' +
+    brands.map(b => `<option value="${esc(b)}"${b===curBrand?' selected':''}>${esc(b)}</option>`).join('');
+  currentPage = 1;
+  applyFilter();
+}
+
+function debouncedFilter() {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(applyFilter, 200);
+}
+
+function applyFilter() {
+  const search = document.getElementById('fSearch').value.toLowerCase();
+  const type   = document.getElementById('fType').value;
+  const brand  = document.getElementById('fBrand').value;
+  filteredRows = allRows.filter(r => {
+    if (type  && r.type  !== type)  return false;
+    if (brand && r.brand !== brand) return false;
+    if (search && !(
+      (r.title||'').toLowerCase().includes(search) ||
+      (r.brand||'').toLowerCase().includes(search) ||
+      (r.asin ||'').toLowerCase().includes(search)
+    )) return false;
+    return true;
+  });
+  currentPage = 1;
+  renderPage();
+}
+
+function changePage(dir) {
+  const maxPage = Math.ceil(filteredRows.length / PAGE_SIZE) || 1;
+  currentPage   = Math.max(1, Math.min(maxPage, currentPage + dir));
+  renderPage();
+}
+
+function goToPage(p) {
+  currentPage = p;
+  renderPage();
+}
+
+function renderPage() {
+  const total   = filteredRows.length;
+  const maxPage = Math.ceil(total / PAGE_SIZE) || 1;
+  const start   = (currentPage - 1) * PAGE_SIZE;
+  const slice   = filteredRows.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('resultsTbody');
+  tbody.innerHTML = slice.map((r,i) =>
+    `<tr>
+      <td>${start+i+1}</td>
+      <td>${esc(r._geo||'')}</td>
+      <td>${esc(r._kw||'')}</td>
+      <td>${esc(r.brand||'—')}</td>
+      <td class="title-cell" title="${esc(r.title||'')}">${esc(r.title||'—')}</td>
+      <td style="white-space:nowrap;font-weight:600;">${esc(r.price||'—')}</td>
+      <td><span class="badge badge-${r.type==='SPONSORED'?'sp':'org'}">${r.type||'—'}</span></td>
+      <td><a class="asin-link" href="${esc(r.url||'#')}" target="_blank" rel="noopener">${esc(r.asin||'—')}</a></td>
+    </tr>`
+  ).join('');
+
+  document.getElementById('pgInfo').textContent =
+    `Showing ${total ? start+1 : 0}–${Math.min(start+PAGE_SIZE,total)} of ${total} results`;
+  document.getElementById('pgPrev').disabled = currentPage <= 1;
+  document.getElementById('pgNext').disabled = currentPage >= maxPage;
+
+  const nums  = document.getElementById('pgNums');
+  let numHtml = '';
+  if (maxPage > 1) {
+    const lo = Math.max(1, currentPage - 3);
+    const hi = Math.min(maxPage, currentPage + 3);
+    if (lo > 1) numHtml += `<button class="pg-btn" onclick="goToPage(1)">1</button>${lo>2?'<span style="padding:0 4px">…</span>':''}`;
+    for (let p = lo; p <= hi; p++)
+      numHtml += `<button class="pg-btn${p===currentPage?' active':''}" onclick="goToPage(${p})">${p}</button>`;
+    if (hi < maxPage) numHtml += `${hi<maxPage-1?'<span style="padding:0 4px">…</span>':''}<button class="pg-btn" onclick="goToPage(${maxPage})">${maxPage}</button>`;
+  }
+  nums.innerHTML = numHtml;
+}
+
+// ─── Re-scrape from dashboard (inline progress bar) ──────────────────────────
+let rescrapeTimer = null;
+
+async function rescrapeAndRefresh() {
+  const btn      = document.getElementById('refreshBtn');
+  const bar      = document.getElementById('dashRescrapeBar');
+  const progress = document.getElementById('dashRescrapeProgress');
+  const msg      = document.getElementById('dashRescrapeMsg');
+  const kwLabel  = document.getElementById('dashRescrapeKw');
+
+  btn.disabled   = true;
+  btn.textContent = '⟳ Running…';
+  bar.style.display = 'block';
+  progress.style.width = '0%';
+  msg.textContent = 'Re-scraping all keywords…';
+  kwLabel.textContent = '';
+
+  await fetch('/api/scrape', { method:'POST' });
+
+  if (rescrapeTimer) clearInterval(rescrapeTimer);
+  rescrapeTimer = setInterval(async () => {
+    const p   = await fetch('/api/progress').then(r => r.json());
+    const pct = p.total_keywords
+      ? Math.min(98, Math.round((p.keyword_index / p.total_keywords) * 100))
+      : 10;
+    progress.style.width = pct + '%';
+    msg.textContent      = p.message || 'Scraping…';
+    kwLabel.textContent  = p.keyword ? `"${p.keyword}"` : '';
+
+    if (p.status === 'done' || p.status === 'error') {
+      clearInterval(rescrapeTimer);
+      progress.style.width = '100%';
+      if (p.status === 'done') {
+        msg.textContent = '✓ Done — reloading data…';
+        setTimeout(async () => {
+          await loadDashboard();
+          bar.style.display = 'none';
+          btn.disabled      = false;
+          btn.textContent   = '⟳ Re-scrape';
+          showToast('Dashboard updated with fresh data');
+        }, 800);
+      } else {
+        msg.textContent = '✗ Scrape error — check terminal';
+        btn.disabled    = false;
+        btn.textContent = '⟳ Re-scrape';
+      }
+    }
+  }, 1000);
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = filteredRows.length ? filteredRows : allRows;
+  if (!rows.length) { showToast('No data to export'); return; }
+  const headers = ['#','Geo','Keyword','Brand','Title','Price','Type','ASIN','URL'];
+  const lines = [headers.join(',')];
+  rows.forEach((r, i) => {
+    const cols = [
+      i + 1,
+      r._geo  || '',
+      r._kw   || '',
+      r.brand || '',
+      '"' + (r.title || '').replace(/"/g, '""') + '"',
+      '"' + (r.price || '').replace(/"/g, '""') + '"',
+      r.type  || '',
+      r.asin  || '',
+      r.url   || '',
+    ];
+    lines.push(cols.join(','));
+  });
+  const filename = 'serp_results_' + new Date().toISOString().slice(0,10) + '.csv';
+  const csvContent = lines.join('\n');
+  try {
+    const blob = new Blob([csvContent], { type:'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    // Fallback for environments where createObjectURL is unavailable
+    const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+    const a = document.createElement('a');
+    a.href     = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  showToast('CSV downloaded');
+}
+
+// ─── Changes feed ─────────────────────────────────────────────────────────────
+let changesData = null;
+
+async function loadInsights() {
+  try {
+    changesData = await fetch('/api/changes').then(r => r.json());
+    renderChanges();
+  } catch (e) { console.error('changes load failed', e); }
+}
+
+function renderChanges() {
+  const section = document.getElementById('changesSection');
+  if (!section || !changesData) return;
+  let feed = changesData.changes || [];
+  feed = feed.filter(c => c.geo === activeGeo && (activeKw === '__all__' || c.keyword === activeKw));
+  if (!feed.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  document.getElementById('changesMeta').textContent =
+    changesData.compared_to ? `vs ${changesData.compared_to}` : '';
+  const icons = { entered_tos:'🆕', left_tos:'📉', new_sp:'💰', stopped_sp:'🔕' };
+  const colors = { entered_tos:'#059669', left_tos:'#dc2626', new_sp:'#d97706', stopped_sp:'#64748b' };
+  document.getElementById('changesFeed').innerHTML = feed.slice(0, 30).map(c =>
+    `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:6px;
+         background:#f8fafc;border-left:3px solid ${colors[c.kind]||'#94a3b8'};border-radius:6px;font-size:13px;color:#334155;">
+      <span>${icons[c.kind]||'•'}</span><span>${esc(c.text)}</span>
+      ${activeKw==='__all__' ? `<span style="margin-left:auto;font-size:11px;color:#94a3b8;">${esc(c.keyword)}</span>` : ''}
+    </div>`
+  ).join('');
+}
+
+// ─── Compare with a past run ──────────────────────────────────────────────────
+let compareData = null;
+
+function prettyRunLabel(fname) {
+  const stem = fname.replace('serp_data_', '').replace('.json', '');
+  const [d, t] = stem.split('_');
+  return t && t.length >= 4 ? `${d} at ${t.slice(0,2)}:${t.slice(2,4)}` : d;
+}
+
+async function loadCompareOptions() {
+  try {
+    const files = await fetch('/api/history').then(r => r.json());
+    const sel = document.getElementById('compareSelect');
+    if (!sel) return;
+    const runs = (files || []).filter(f => !f.includes('backup'));
+    sel.innerHTML = '<option value="">Select a past run…</option>' +
+      runs.map(f => `<option value="${esc(f)}">${esc(prettyRunLabel(f))}</option>`).join('');
+    document.getElementById('compareMeta').textContent =
+      runs.length ? `${runs.length} archived run${runs.length>1?'s':''} available` : 'No archived runs yet — every scrape adds one';
+  } catch (e) {}
+}
+
+async function runCompare() {
+  const file = document.getElementById('compareSelect').value;
+  if (!file) { showToast('Pick a past run first'); return; }
+  const res = await fetch('/api/compare?file=' + encodeURIComponent(file));
+  if (!res.ok) { showToast('Could not load that run'); return; }
+  compareData = await res.json();
+  renderCompare();
+  showToast('Compared against ' + compareData.compared_to);
+}
+
+function fmtState(s) {
+  if (!s) return '<span style="color:#cbd5e1;">—</span>';
+  const bits = [];
+  if (s.sp)         bits.push(`${s.sp} SP`);
+  if (s.best_org)   bits.push(`org #${s.best_org}`);
+  if (s.tos_banner) bits.push(`${s.tos_banner} TOS`);
+  if (s.ros_banner) bits.push(`${s.ros_banner} ROS`);
+  return bits.length ? esc(bits.join(' · ')) : '<span style="color:#cbd5e1;">—</span>';
+}
+
+function renderCompare() {
+  const box = document.getElementById('compareResults');
+  if (!box || !compareData) return;
+  const geoData = compareData.geos[activeGeo] || {};
+  const kws = activeKw === '__all__' ? Object.keys(geoData) : [activeKw].filter(k => geoData[k]);
+  if (!kws.length) {
+    box.innerHTML = '<div class="empty-state">No overlapping keywords between the two runs for this view.</div>';
+    return;
+  }
+  const chip = {
+    gained:   ['#dcfce7', '#15803d', '▲ gained'],
+    declined: ['#fee2e2', '#b91c1c', '▼ declined'],
+    new:      ['#dbeafe', '#1d4ed8', '★ new'],
+    exited:   ['#f3f4f6', '#6b7280', '✕ exited'],
+    stable:   ['#f8fafc', '#94a3b8', '— stable'],
+  };
+  let html = '';
+  kws.forEach(kw => {
+    const d = geoData[kw];
+    const rows = d.brands.filter(r => r.status !== 'stable' || (r.now && (r.now.sp || r.now.tos_banner)));
+    html += `<div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:800;color:#334155;margin-bottom:8px;">“${esc(kw)}”
+        <span style="font-weight:600;color:#94a3b8;font-size:11px;">then (${esc(compareData.compared_to)}) → now</span></div>
+      <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+        <thead><tr style="text-align:left;color:#64748b;font-size:11px;">
+          <th style="padding:6px 10px;">Brand</th><th style="padding:6px 10px;">Then</th>
+          <th style="padding:6px 10px;">Now</th><th style="padding:6px 10px;">Movement</th></tr></thead>
+        <tbody>` +
+      rows.map(r => {
+        const [bg, fg, label] = chip[r.status] || chip.stable;
+        const isMine = dashBrand && brandMatch(dashBrand, r.brand);
+        return `<tr style="border-top:1px solid #f1f5f9;${isMine?'background:rgba(54,117,136,.06);':''}">
+          <td style="padding:7px 10px;font-weight:${isMine?'800':'600'};color:${isMine?'#367588':'#334155'};">${isMine?'🎯 ':''}${esc(r.brand)}</td>
+          <td style="padding:7px 10px;color:#64748b;">${fmtState(r.then)}</td>
+          <td style="padding:7px 10px;color:#334155;">${fmtState(r.now)}</td>
+          <td style="padding:7px 10px;"><span style="background:${bg};color:${fg};border-radius:99px;
+              padding:2px 10px;font-size:11px;font-weight:700;white-space:nowrap;">${label}</span></td>
+        </tr>`;
+      }).join('') + `</tbody></table></div>`;
+    if (d.suggestions.length) {
+      html += `<div style="margin-top:10px;">` + d.suggestions.map(s =>
+        `<div style="display:flex;gap:8px;padding:7px 12px;margin-bottom:5px;background:#fffbeb;
+             border-left:3px solid #d97706;border-radius:6px;font-size:12.5px;color:#78350f;">💡 ${esc(s)}</div>`
+      ).join('') + `</div>`;
+    }
+    html += `</div>`;
+  });
+  box.innerHTML = html;
+}
+
+// ─── Scheduler ────────────────────────────────────────────────────────────────
+async function loadSchedule() {
+  try {
+    const s = await fetch('/api/schedule').then(r => r.json());
+    document.getElementById('schedEnabled').checked = !!s.enabled;
+    if (s.time) document.getElementById('schedTime').value = s.time;
+    updateSchedStatus(s);
+  } catch (e) {}
+}
+
+async function saveSchedule() {
+  const enabled = document.getElementById('schedEnabled').checked;
+  const time    = document.getElementById('schedTime').value || '09:00';
+  const res = await fetch('/api/schedule', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({enabled, time}),
+  }).then(r => r.json());
+  if (res.ok) { updateSchedStatus(res.schedule); showToast(enabled ? `Daily scrape ON — ${time} server time` : 'Daily scrape off'); }
+}
+
+function updateSchedStatus(s) {
+  const el = document.getElementById('schedStatus');
+  if (!el) return;
+  el.textContent = s.enabled
+    ? `Armed — runs daily at ${s.time} (server time)${s.last_run ? ` · last ran ${s.last_run}` : ''}`
+    : 'Runs on the server — your laptop can be off.';
+}
+
+// ─── Landing: keep project name synced to brand when the checkbox is on ──────
+function syncProjectName() {
+  const same  = document.getElementById('sameAsBrand');
+  const brand = document.getElementById('brandName');
+  const proj  = document.getElementById('projectName');
+  if (!same || !brand || !proj) return;
+  proj.disabled = same.checked;
+  proj.style.opacity = same.checked ? .6 : 1;
+  if (same.checked) proj.value = brand.value;
+}
+
+// ─── UX elevation: micro-interactions (visual only) ──────────────────────────
+// Button ripple
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn');
+  if (!btn || btn.disabled) return;
+  const r = btn.getBoundingClientRect();
+  const d = Math.max(r.width, r.height);
+  const s = document.createElement('span');
+  s.className = 'ripple';
+  s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px;`;
+  btn.appendChild(s);
+  setTimeout(() => s.remove(), 600);
+});
+
+// Animated count-up for KPI numbers
+function countUp(el, target) {
+  const val = parseInt(target, 10);
+  if (isNaN(val)) { el.textContent = target; return; }
+  const from = parseInt(el.textContent, 10) || 0;
+  if (from === val) { el.textContent = val; return; }
+  const dur = 600, t0 = performance.now();
+  (function tick(t) {
+    const p = Math.min((t - t0) / dur, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (val - from) * eased);
+    if (p < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+
+// Confetti burst when a scrape completes
+function fireConfetti() {
+  const colors = ['#367588','#E35D34','#B8DBD9','#4a9db3','#f5a623','#16a34a'];
+  for (let i = 0; i < 90; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDuration = (2 + Math.random() * 2.2) + 's';
+    c.style.animationDelay = (Math.random() * .7) + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    c.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5500);
+  }
+}
+// Fire automatically when the done-message becomes visible (no logic changes)
+new MutationObserver(() => {
+  const el = document.getElementById('progress-done-msg');
+  if (!el) return;
+  if (el.style.display === 'none') { delete el.dataset.celebrated; return; }
+  if (el.style.display && !el.dataset.celebrated) {
+    el.dataset.celebrated = '1';
+    fireConfetti();
+  }
+}).observe(document.getElementById('progress-done-msg') || document.body,
+           { attributes: true, attributeFilter: ['style'] });
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+(async function init() {
+  await loadProfiles();
+  loadSchedule();
+  const prog = await fetch('/api/progress').then(r => r.json()).catch(() => ({status:'idle'}));
+  if (prog.status === 'running') {
+    goStep(4);
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('startBtn').disabled = true;
+    pollProgress();
+  }
+})();
+</script>
+</body>
+</html>
