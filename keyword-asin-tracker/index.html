@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyword × ASIN Tracker | Growisto</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Poppins', sans-serif; background: #F6F6F4; color: #1D1D20; min-height: 100vh; }
+
+.page { max-width: 1400px; margin: 0 auto; padding: 20px 24px 60px; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #367588, #2A5A6A);
+  color: #fff;
+  padding: 20px 24px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.header img { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; }
+.header h1 { font-size: 22px; font-weight: 700; margin: 0; }
+.header p { font-size: 13px; color: #B8DBD9; margin: 2px 0 0; font-weight: 400; }
+.flame-bar { height: 4px; background: #E35D34; border-radius: 2px; margin-bottom: 20px; }
+
+/* Upload section */
+.upload-section {
+  background: #fff;
+  border: 1px solid #B8DBD9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.upload-section h2 {
+  font-size: 14px; font-weight: 600; color: #367588;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 6px;
+}
+.upload-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.upload-col label { font-size: 12px; font-weight: 600; color: #1D1D20; display: block; margin-bottom: 6px; }
+.upload-col .sub { font-size: 11px; color: #666; font-weight: 400; }
+.file-drop {
+  border: 2px dashed #B8DBD9;
+  border-radius: 6px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+}
+.file-drop:hover, .file-drop.drag-over { border-color: #367588; background: #eaf4f6; }
+.file-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.file-drop .drop-icon { font-size: 24px; margin-bottom: 4px; }
+.file-drop .drop-text { font-size: 12px; color: #555; }
+.file-drop .drop-text b { color: #367588; }
+.file-list { margin-top: 8px; }
+.file-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #B8DBD9; color: #1D1D20;
+  border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 500;
+  margin: 2px; max-width: 100%; word-break: break-all;
+}
+.file-chip .remove { cursor: pointer; color: #E35D34; font-weight: 700; margin-left: 2px; }
+
+.btn {
+  background: #367588; color: #fff;
+  border: none; border-radius: 4px;
+  padding: 10px 24px; font-family: 'Poppins', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background .2s;
+}
+.btn:hover { background: #2A5A6A; }
+.btn:disabled { background: #aaa; cursor: not-allowed; }
+.btn-outline {
+  background: transparent; color: #367588;
+  border: 1.5px solid #367588; border-radius: 4px;
+  padding: 6px 14px; font-family: 'Poppins', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.btn-outline:hover { background: #367588; color: #fff; }
+
+.upload-footer { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+
+/* Alerts */
+.alert {
+  background: #B8DBD9; border-left: 4px solid #367588;
+  color: #1D1D20; border-radius: 0 6px 6px 0;
+  padding: 10px 14px; font-size: 13px; margin-bottom: 12px;
+}
+.alert.warn { background: #fff3cd; border-color: #d4a017; }
+.alert.error { background: #fde8e8; border-color: #E35D34; }
+
+/* Summary strip */
+.summary-strip {
+  font-size: 13px; color: #1D1D20; margin-bottom: 12px;
+  display: none;
+}
+.summary-strip b { color: #367588; }
+
+/* KPI cards */
+.kpi-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; display: none; }
+.kpi-card {
+  flex: 1; min-width: 120px;
+  background: #B8DBD9; border-left: 4px solid #367588;
+  border-radius: 0 8px 8px 0; padding: 10px 14px;
+}
+.kpi-card .kpi-label { font-size: 11px; font-weight: 600; color: #1D1D20; margin-bottom: 3px; white-space: nowrap; }
+.kpi-card .kpi-value { font-size: 20px; font-weight: 700; color: #367588; white-space: nowrap; }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid #B8DBD9; margin: 16px 0; }
+
+/* Filter + table section */
+.main-section { display: none; }
+.filter-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.filter-input {
+  flex: 1; border: 1px solid #B8DBD9; border-radius: 4px;
+  padding: 8px 12px; font-family: 'Poppins', sans-serif; font-size: 13px;
+  background: #fff; color: #1D1D20; outline: none;
+}
+.filter-input:focus { border-color: #367588; }
+.table-caption { font-size: 12px; color: #555; margin-bottom: 4px; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 1px solid #B8DBD9; border-radius: 8px; }
+.kw-table-wrap { max-height: 480px; overflow-y: auto; }
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+  background: #fff;
+}
+.data-table thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: #B8DBD9; color: #1D1D20;
+  font-weight: 600; font-size: 11px;
+  padding: 10px 10px; white-space: nowrap;
+  text-align: center; border-bottom: 2px solid #367588;
+}
+.data-table thead th:first-child { text-align: left; }
+.data-table tbody tr { cursor: pointer; transition: background .15s; }
+.data-table tbody tr:nth-child(even) { background: #f8fbfc; }
+.data-table tbody tr:hover { background: #eaf4f6; }
+.data-table tbody tr.selected { background: #d0eaf0 !important; }
+.data-table td {
+  padding: 8px 10px; text-align: center;
+  border-bottom: 1px solid #f0f0f0; white-space: nowrap;
+}
+.data-table td:first-child { text-align: left; font-weight: 500; }
+.table-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+
+/* Drilldown */
+.drilldown-section { display: none; margin-top: 24px; }
+.drilldown-header {
+  background: #B8DBD9; border-left: 4px solid #367588;
+  border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 16px;
+}
+.drilldown-header .kw-name { font-size: 14px; font-weight: 700; color: #367588; }
+.drilldown-header .kw-sub { font-size: 12px; color: #1D1D20; margin-left: 8px; }
+.section-title { font-size: 13px; font-weight: 700; color: #367588; margin: 16px 0 8px; }
+.caption-small { font-size: 11px; color: #555; margin-top: 6px; }
+
+/* Checkbox */
+.checkbox-row { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 8px; cursor: pointer; }
+.checkbox-row input { accent-color: #367588; width: 14px; height: 14px; cursor: pointer; }
+
+/* Spinner */
+.spinner-overlay {
+  position: fixed; inset: 0; background: rgba(246,246,244,.7);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+  display: none;
+}
+.spinner {
+  width: 40px; height: 40px; border: 4px solid #B8DBD9;
+  border-top-color: #367588; border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .upload-grid { grid-template-columns: 1fr; }
+  .kpi-row { flex-wrap: wrap; }
+  .kpi-card { min-width: calc(50% - 4px); }
+}
+</style>
+</head>
+<body>
+
+<div class="spinner-overlay" id="spinner"><div class="spinner"></div></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <img src="/assets/growisto-icon.png" alt="Growisto">
+    <div>
+      <h1>Keyword × ASIN Tracker</h1>
+      <p>SQP ASIN-view organic share × per-ASIN ad performance — keyword intelligence by product</p>
+    </div>
+  </div>
+  <div class="flame-bar"></div>
+
+  <!-- Alerts container -->
+  <div id="alerts"></div>
+
+  <!-- Upload section -->
+  <div class="upload-section" id="upload-section">
+    <h2>📂 Upload Reports</h2>
+    <div class="upload-grid">
+      <div class="upload-col">
+        <label>SQP ASIN View <span class="sub">— one CSV per ASIN (upload multiple)</span></label>
+        <div class="file-drop" id="drop-sqp">
+          <input type="file" id="input-sqp" accept=".csv" multiple>
+          <div class="drop-icon">📄</div>
+          <div class="drop-text"><b>Click or drag</b> SQP ASIN CSVs here</div>
+        </div>
+        <div class="file-list" id="list-sqp"></div>
+      </div>
+      <div class="upload-col">
+        <label>STIS Report <span class="sub">— Search Term Impression Share (optional, for ads)</span></label>
+        <div class="file-drop" id="drop-stis">
+          <input type="file" id="input-stis" accept=".csv">
+          <div class="drop-icon">📊</div>
+          <div class="drop-text"><b>Click or drag</b> STIS CSV here</div>
+        </div>
+        <div class="file-list" id="list-stis"></div>
+      </div>
+      <div class="upload-col">
+        <label>SP Advertised Product <span class="sub">— campaign → ASIN map (optional, for ads)</span></label>
+        <div class="file-drop" id="drop-adv">
+          <input type="file" id="input-adv" accept=".csv,.xlsx,.xls">
+          <div class="drop-icon">📋</div>
+          <div class="drop-text"><b>Click or drag</b> Advertised Product report here</div>
+        </div>
+        <div class="file-list" id="list-adv"></div>
+      </div>
+    </div>
+    <div class="upload-footer">
+      <button class="btn" id="btn-load" onclick="loadAll()">Load Tracker</button>
+      <button class="btn-outline" id="btn-reset" onclick="resetAll()" style="display:none">Reset</button>
+    </div>
+  </div>
+
+  <!-- Info message when no files -->
+  <div class="alert" id="msg-empty" style="display:none">
+    ℹ️ Upload at least one SQP ASIN-view CSV to activate the tracker. Add STIS + Advertised Product reports to unlock the ads breakdown.
+  </div>
+
+  <!-- Summary strip -->
+  <div class="summary-strip" id="summary-strip"></div>
+
+  <!-- KPI cards -->
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <hr class="divider" id="main-divider" style="display:none">
+
+  <!-- Main table section -->
+  <div class="main-section" id="main-section">
+    <div class="filter-row">
+      <input class="filter-input" id="kw-filter" placeholder="🔍 Filter keywords, e.g. coffee beans" oninput="onFilter()">
+      <button class="btn-outline" onclick="exportMain()">⬇ Export</button>
+    </div>
+    <div class="table-caption" id="table-caption"></div>
+    <div class="table-wrap kw-table-wrap">
+      <table class="data-table" id="kw-table">
+        <thead id="kw-thead"></thead>
+        <tbody id="kw-tbody"></tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:6px;">Click a row to see the per-ASIN breakdown</div>
+  </div>
+
+  <!-- Drill-down section -->
+  <div class="drilldown-section" id="drilldown-section">
+    <div class="drilldown-header" id="drilldown-header"></div>
+
+    <div class="section-title">🌱 Organic — SQP share by ASIN</div>
+    <div class="table-wrap">
+      <table class="data-table" id="asin-table">
+        <thead id="asin-thead"></thead>
+        <tbody id="asin-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:8px;">
+      <button class="btn-outline" onclick="exportAsin()">⬇ Export ASIN breakdown</button>
+    </div>
+
+    <div id="ads-section" style="display:none">
+      <div class="section-title">📣 Ads — campaign performance by ASIN</div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="chk-only-uploaded" onchange="renderAdsTable()">
+        Show only uploaded ASINs
+      </label>
+      <div id="ads-table-wrap">
+        <div class="table-wrap">
+          <table class="data-table" id="ads-table">
+            <thead id="ads-thead"></thead>
+            <tbody id="ads-tbody"></tbody>
+          </table>
+        </div>
+        <div class="caption-small" id="ads-caption"></div>
+      </div>
+      <div id="ads-empty" class="alert" style="display:none;margin-top:8px;"></div>
+      <div style="margin-top:8px;">
+        <button class="btn-outline" onclick="exportAds()">⬇ Export ads breakdown</button>
+      </div>
+    </div>
+
+    <div id="ads-hint" class="alert" style="display:none;margin-top:16px;">
+      💡 Upload STIS + SP Advertised Product reports to see each ASIN's ad performance for this keyword.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxf8LQkBGNWOZ7eVYoOvKpcejcbii-ULFaTEsnviP-s4CPxjIFmo7jmXjiTl5JgOLbz/exec';
+const TOOL_NAME   = 'Keyword ASIN Tracker';
+
+const CURRENCY_SYMBOLS = {
+  USD:'$', INR:'₹', EUR:'€', GBP:'£', JPY:'¥',
+  CAD:'C$', AUD:'A$', MXN:'MX$', BRL:'R$', SGD:'S$',
+  AED:'AED ', SAR:'SAR ', SEK:'kr ', PLN:'zł ', TRY:'₺',
+};
+
+const SQP_RENAME = {
+  'Search Query':               'Keyword',
+  'Search Query Volume':        'SQV',
+  'Impressions: Total Count':   'T_Impr',
+  'Impressions: ASIN Count':    'A_Impr',
+  'Impressions: ASIN Share %':  'A_ImprShare',
+  'Clicks: Total Count':        'T_Clicks',
+  'Clicks: Click Rate %':       'ClickRate',
+  'Clicks: ASIN Count':         'A_Clicks',
+  'Clicks: ASIN Share %':       'A_ClickShare',
+  'Cart Adds: Total Count':     'T_Carts',
+  'Cart Adds: ASIN Count':      'A_Carts',
+  'Cart Adds: ASIN Share %':    'A_CartShare',
+  'Purchases: Total Count':     'T_Purch',
+  'Purchases: ASIN Count':      'A_Purch',
+  'Purchases: ASIN Share %':    'A_PurchShare',
+};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+const state = {
+  sqpFiles: [],     // File objects
+  stisFile: null,
+  advFile: null,
+  sqpRows: [],      // all raw SQP rows merged (with ASIN, Week cols)
+  uploadedAsins: [],
+  weeks: [],
+  stisAgg: [],      // [{Keyword, Campaign, Impressions, Clicks, Spend, Sales, Orders, ACOS, CTR, CPC}]
+  campAsin: [],     // [{Campaign, ASIN, Campaign_ASIN_Count}]
+  kw: [],           // aggregated keyword rows
+  currency: '$',
+  hasAds: false,
+  selectedKw: null,
+  filteredKw: [],
+};
+
+// ─── Formatting helpers ───────────────────────────────────────────────────────
+const fmtN  = v => (v != null && !isNaN(v)) ? Math.round(v).toLocaleString() : '–';
+const fmtP  = (v, dp=2) => (v != null && !isNaN(v)) ? v.toFixed(dp) + '%' : '–';
+const fmtM  = v => (v != null && !isNaN(v)) ? state.currency + v.toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:2}) : '–';
+const fmtK  = v => typeof v === 'string' ? v.replace(/\b\w/g, c => c.toUpperCase()) : v;
+const toNum = s => {
+  if (s == null || s === '') return NaN;
+  return parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
+};
+
+// ─── File handling ─────────────────────────────────────────────────────────────
+function setupDropZone(dropId, inputId, multi, onFiles) {
+  const drop = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+    onFiles(Array.from(e.dataTransfer.files));
+  });
+  input.addEventListener('change', () => onFiles(Array.from(input.files)));
+}
+
+function renderFileChips(listId, files) {
+  const el = document.getElementById(listId);
+  el.innerHTML = files.map((f, i) =>
+    `<span class="file-chip">${f.name}<span class="remove" onclick="removeFile('${listId}',${i})">×</span></span>`
+  ).join('');
+}
+
+function removeFile(listId, idx) {
+  if (listId === 'list-sqp') {
+    state.sqpFiles.splice(idx, 1);
+    renderFileChips('list-sqp', state.sqpFiles);
+  } else if (listId === 'list-stis') {
+    state.stisFile = null;
+    renderFileChips('list-stis', []);
+  } else if (listId === 'list-adv') {
+    state.advFile = null;
+    renderFileChips('list-adv', []);
+  }
+}
+
+setupDropZone('drop-sqp', 'input-sqp', true, files => {
+  state.sqpFiles.push(...files.filter(f => f.name.endsWith('.csv')));
+  renderFileChips('list-sqp', state.sqpFiles);
+});
+setupDropZone('drop-stis', 'input-stis', false, files => {
+  if (files.length) { state.stisFile = files[0]; renderFileChips('list-stis', [state.stisFile]); }
+});
+setupDropZone('drop-adv', 'input-adv', false, files => {
+  if (files.length) { state.advFile = files[0]; renderFileChips('list-adv', [state.advFile]); }
+});
+
+// ─── Read file helpers ─────────────────────────────────────────────────────────
+function readText(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsText(file, 'utf-8');
+  });
+}
+function readBuffer(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+// ─── Parse SQP ASIN-view CSV ──────────────────────────────────────────────────
+async function parseSQP(file) {
+  const text = await readText(file);
+  const lines = text.split('\n');
+  const metaLine = lines[0] || '';
+
+  // Extract ASIN from metadata row
+  const asinMatch = metaLine.match(/B0[A-Z0-9]{8}/);
+  const asin = asinMatch ? asinMatch[0] : file.name.replace('.csv', '');
+
+  // Extract week
+  const weekMatch = metaLine.match(/Select week=\["([^"]+)"\]/);
+  const week = weekMatch ? weekMatch[1] : '';
+
+  // Parse from row 2 onwards (row 1 = headers, row 0 = metadata)
+  const dataText = lines.slice(1).join('\n');
+  const result = Papa.parse(dataText, { header: true, skipEmptyLines: true, dynamicTyping: false });
+
+  const rows = result.data.map(row => {
+    const renamed = {};
+    // Trim column names and rename
+    for (const [origKey, val] of Object.entries(row)) {
+      const key = origKey.trim();
+      const newKey = SQP_RENAME[key] || key;
+      renamed[newKey] = val;
+    }
+    // Convert numeric columns
+    const numCols = Object.values(SQP_RENAME).filter(c => c !== 'Keyword');
+    numCols.forEach(c => { renamed[c] = toNum(renamed[c]); });
+    renamed['Keyword'] = (renamed['Keyword'] || '').toString().trim().toLowerCase();
+    renamed['ASIN'] = asin;
+    renamed['Week'] = week;
+    return renamed;
+  }).filter(r => r['Keyword']);
+
+  return { rows, asin, week };
+}
+
+// ─── Parse STIS report ────────────────────────────────────────────────────────
+async function parseSTIS(file) {
+  const text = await readText(file);
+  const result = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: false });
+  const data = result.data;
+  if (!data.length) throw new Error('STIS file is empty.');
+
+  const cols = Object.keys(data[0]).map(c => c.trim());
+  const salesCol  = cols.find(c => c.toLowerCase().includes('total sales') && !c.toLowerCase().includes('acos'));
+  const ordersCol = cols.find(c => c.toLowerCase().includes('total orders'));
+  if (!salesCol || !ordersCol) throw new Error(`Could not find total sales / total orders columns. Found: ${cols.join(', ')}`);
+
+  // Detect currency
+  let cur = '$';
+  const curCol = cols.find(c => c === 'Currency');
+  if (curCol) {
+    const codes = data.map(r => (r[curCol] || '').trim().toUpperCase()).filter(Boolean);
+    if (codes.length) cur = CURRENCY_SYMBOLS[codes[0]] || (codes[0] + ' ');
+  } else {
+    const spendCol = cols.find(c => c === 'Spend');
+    if (spendCol && data.length) {
+      const sym = (data[0][spendCol] || '').toString().match(/[^\d\s.,\-]+/);
+      if (sym) cur = sym[0];
+    }
+  }
+
+  // Group by Keyword + Campaign
+  const grouped = {};
+  data.forEach(row => {
+    const kw  = (row['Customer Search Term'] || '').toString().trim().toLowerCase();
+    const cam = (row['Campaign Name'] || '').toString().trim();
+    if (!kw || !cam) return;
+    const key = kw + '|||' + cam;
+    if (!grouped[key]) grouped[key] = { Keyword: kw, Campaign: cam, Impressions: 0, Clicks: 0, Spend: 0, Sales: 0, Orders: 0 };
+    grouped[key].Impressions += toNum(row['Impressions']) || 0;
+    grouped[key].Clicks      += toNum(row['Clicks']) || 0;
+    grouped[key].Spend       += toNum(row[spendCol || 'Spend']) || 0;
+    grouped[key].Sales       += toNum(row[salesCol]) || 0;
+    grouped[key].Orders      += toNum(row[ordersCol]) || 0;
+  });
+
+  const agg = Object.values(grouped).map(r => ({
+    ...r,
+    ACOS: r.Sales > 0 ? r.Spend / r.Sales * 100 : NaN,
+    CTR:  r.Impressions > 0 ? r.Clicks / r.Impressions * 100 : NaN,
+    CPC:  r.Clicks > 0 ? r.Spend / r.Clicks : NaN,
+  }));
+
+  return { agg, cur };
+}
+
+// ─── Parse Advertised Product report ─────────────────────────────────────────
+async function parseAdvProduct(file) {
+  let data;
+  if (file.name.toLowerCase().endsWith('.csv')) {
+    const text = await readText(file);
+    const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+    data = result.data;
+  } else {
+    const buf = await readBuffer(file);
+    const wb = XLSX.read(buf, { type: 'array' });
+    data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  }
+  if (!data.length) throw new Error('Advertised Product file is empty.');
+
+  const cols = Object.keys(data[0]).map(c => c.trim());
+  const asinCol = cols.find(c => c.toLowerCase().includes('advertised asin'));
+  const campCol = cols.find(c => c.toLowerCase() === 'campaign name');
+  if (!asinCol || !campCol) throw new Error(`Could not find Advertised ASIN / Campaign Name columns. Found: ${cols.join(', ')}`);
+
+  // Deduplicate Campaign+ASIN pairs
+  const seen = new Set();
+  const rows = [];
+  data.forEach(row => {
+    const cam  = (row[campCol] || '').toString().trim();
+    const asin = (row[asinCol] || '').toString().trim().toUpperCase();
+    if (!cam || !asin) return;
+    const key = cam + '|||' + asin;
+    if (!seen.has(key)) { seen.add(key); rows.push({ Campaign: cam, ASIN: asin }); }
+  });
+
+  // Count ASINs per campaign
+  const campCount = {};
+  rows.forEach(r => { campCount[r.Campaign] = (campCount[r.Campaign] || 0) + 1; });
+  rows.forEach(r => { r.Campaign_ASIN_Count = campCount[r.Campaign]; });
+
+  return rows;
+}
+
+// ─── Aggregate SQP rows into keyword-level table ──────────────────────────────
+function aggregateSQP(allRows) {
+  const grouped = {};
+  allRows.forEach(r => {
+    const kw = r['Keyword'];
+    if (!kw) return;
+    if (!grouped[kw]) grouped[kw] = {
+      Keyword: kw,
+      SQV: 0, T_Impr: 0, T_Clicks: 0, T_Carts: 0, T_Purch: 0,
+      A_Impr: 0, A_Clicks: 0, A_Carts: 0, A_Purch: 0,
+      _asins: new Set(),
+    };
+    const g = grouped[kw];
+    // Total metrics: max (same across files for same keyword)
+    g.SQV     = Math.max(g.SQV,     isNaN(r.SQV)      ? 0 : r.SQV);
+    g.T_Impr  = Math.max(g.T_Impr,  isNaN(r.T_Impr)   ? 0 : r.T_Impr);
+    g.T_Clicks= Math.max(g.T_Clicks,isNaN(r.T_Clicks)  ? 0 : r.T_Clicks);
+    g.T_Carts = Math.max(g.T_Carts, isNaN(r.T_Carts)   ? 0 : r.T_Carts);
+    g.T_Purch = Math.max(g.T_Purch, isNaN(r.T_Purch)   ? 0 : r.T_Purch);
+    // ASIN metrics: sum
+    g.A_Impr  += isNaN(r.A_Impr)   ? 0 : r.A_Impr;
+    g.A_Clicks+= isNaN(r.A_Clicks) ? 0 : r.A_Clicks;
+    g.A_Carts += isNaN(r.A_Carts)  ? 0 : r.A_Carts;
+    g.A_Purch += isNaN(r.A_Purch)  ? 0 : r.A_Purch;
+    if (r.A_Impr > 0) g._asins.add(r.ASIN);
+  });
+
+  let rows = Object.values(grouped).map(g => ({
+    ...g,
+    N_ASINs:       g._asins.size,
+    A_ImprShare:   g.T_Impr   > 0 ? g.A_Impr   / g.T_Impr   * 100 : NaN,
+    A_ClickShare:  g.T_Clicks > 0 ? g.A_Clicks / g.T_Clicks * 100 : NaN,
+    A_PurchShare:  g.T_Purch  > 0 ? g.A_Purch  / g.T_Purch  * 100 : NaN,
+    Overall_CTR:   g.T_Impr   > 0 ? g.T_Clicks / g.T_Impr   * 100 : NaN,
+    ASIN_CTR:      g.A_Impr   > 0 ? g.A_Clicks / g.A_Impr   * 100 : NaN,
+  }));
+
+  rows.sort((a, b) => (b.SQV || 0) - (a.SQV || 0));
+  return rows;
+}
+
+// ─── Main load ────────────────────────────────────────────────────────────────
+async function loadAll() {
+  clearAlerts();
+  if (!state.sqpFiles.length) {
+    showAlert('Upload at least one SQP ASIN-view CSV to activate the tracker.', 'info');
+    return;
+  }
+
+  document.getElementById('spinner').style.display = 'flex';
+  try {
+    // Parse SQP files
+    const sqpResults = await Promise.all(state.sqpFiles.map(f => parseSQP(f)));
+    const allRows = sqpResults.flatMap(r => r.rows);
+    const asins   = sqpResults.map(r => r.asin);
+    const weeks   = [...new Set(sqpResults.map(r => r.week).filter(Boolean))];
+
+    // Check for duplicate ASINs
+    const dupAsins = asins.filter((a, i) => asins.indexOf(a) !== i);
+    if (dupAsins.length) showAlert(`⚠️ Duplicate ASIN files detected: ${[...new Set(dupAsins)].join(', ')} — the same ASIN was uploaded twice.`, 'warn');
+
+    // Check week mismatch
+    if (weeks.length > 1) showAlert(`⚠️ The uploaded SQP files cover different weeks: ${weeks.join(' · ')} — totals may not line up. For a clean view, upload files from the same week.`, 'warn');
+
+    state.sqpRows       = allRows;
+    state.uploadedAsins = [...new Set(asins.map(a => a.toUpperCase()))];
+    state.weeks         = weeks;
+
+    // Add per-ASIN derived metrics (for drill-down)
+    allRows.forEach(r => {
+      r.ASIN_CTR = r.A_Impr  > 0 ? r.A_Clicks / r.A_Impr  * 100 : NaN;
+      r.ASIN_CVR = r.A_Clicks > 0 ? r.A_Purch  / r.A_Clicks * 100 : NaN;
+    });
+
+    // Aggregate
+    state.kw = aggregateSQP(allRows);
+
+    // Parse ads reports
+    state.hasAds = false;
+    state.stisAgg = []; state.campAsin = []; state.currency = '$';
+
+    const hasStis = !!state.stisFile;
+    const hasAdv  = !!state.advFile;
+
+    if (hasStis && hasAdv) {
+      try {
+        const stisResult = await parseSTIS(state.stisFile);
+        const campResult = await parseAdvProduct(state.advFile);
+        state.stisAgg  = stisResult.agg;
+        state.campAsin = campResult;
+        state.currency = stisResult.cur;
+        state.hasAds   = true;
+
+        // Merge ad metrics into kw table
+        const adsByKw = {};
+        state.stisAgg.forEach(r => {
+          if (!adsByKw[r.Keyword]) adsByKw[r.Keyword] = { Ad_Clicks: 0, Ad_Spend: 0, Ad_Sales: 0, Ad_Orders: 0 };
+          adsByKw[r.Keyword].Ad_Clicks  += r.Clicks;
+          adsByKw[r.Keyword].Ad_Spend   += r.Spend;
+          adsByKw[r.Keyword].Ad_Sales   += r.Sales;
+          adsByKw[r.Keyword].Ad_Orders  += r.Orders;
+        });
+        state.kw.forEach(row => {
+          const ad = adsByKw[row.Keyword];
+          if (ad) {
+            row.Ad_Clicks = ad.Ad_Clicks;
+            row.Ad_Spend  = ad.Ad_Spend;
+            row.Ad_Sales  = ad.Ad_Sales;
+            row.Ad_Orders = ad.Ad_Orders;
+            row.Ad_ACOS   = ad.Ad_Sales > 0 ? ad.Ad_Spend / ad.Ad_Sales * 100 : NaN;
+          }
+        });
+      } catch(e) {
+        showAlert(`Ad report parsing failed: ${e.message}`, 'error');
+      }
+    } else if (hasStis || hasAdv) {
+      showAlert('ℹ️ Upload both STIS and Advertised Product reports to unlock the ads breakdown — one alone isn\'t enough to map keywords to ASINs.', 'info');
+    }
+
+    state.selectedKw = null;
+    renderAll();
+
+    // Collapse upload section
+    document.getElementById('upload-section').style.marginBottom = '8px';
+    document.getElementById('btn-reset').style.display = 'inline-block';
+
+  } catch(e) {
+    showAlert(`Error processing files: ${e.message}`, 'error');
+  } finally {
+    document.getElementById('spinner').style.display = 'none';
+  }
+}
+
+// ─── Render everything ────────────────────────────────────────────────────────
+function renderAll() {
+  renderSummaryStrip();
+  renderKPIs();
+  renderKwTable();
+  document.getElementById('main-divider').style.display = 'block';
+  document.getElementById('drilldown-section').style.display = 'none';
+  state.selectedKw = null;
+}
+
+function renderSummaryStrip() {
+  const el = document.getElementById('summary-strip');
+  const weekStr = state.weeks.length ? state.weeks.join(' · ') : '–';
+  el.innerHTML = `<b>Week:</b> ${weekStr} &nbsp;·&nbsp; <b>${state.uploadedAsins.length}</b> ASINs uploaded &nbsp;·&nbsp; <b>${state.kw.length.toLocaleString()}</b> keywords tracked &nbsp;·&nbsp; <b>Ads:</b> ${state.hasAds ? '✅ connected' : 'not connected'}`;
+  el.style.display = 'block';
+}
+
+function renderKPIs() {
+  const row = document.getElementById('kpi-row');
+  const totalImpr   = state.kw.reduce((s,r) => s + (r.A_Impr   || 0), 0);
+  const totalClicks = state.kw.reduce((s,r) => s + (r.A_Clicks || 0), 0);
+  const totalPurch  = state.kw.reduce((s,r) => s + (r.A_Purch  || 0), 0);
+
+  const items = [
+    ['Keywords',          state.kw.length.toLocaleString()],
+    ['ASINs',             state.uploadedAsins.length.toString()],
+    ['Total ASIN Impr.',  totalImpr.toLocaleString()],
+    ['Total ASIN Clicks', totalClicks.toLocaleString()],
+    ['Total ASIN Purch.', totalPurch.toLocaleString()],
+  ];
+
+  if (state.hasAds) {
+    const tSpend = state.kw.reduce((s,r) => s + (r.Ad_Spend || 0), 0);
+    const tSales = state.kw.reduce((s,r) => s + (r.Ad_Sales || 0), 0);
+    const tAcos  = tSales > 0 ? tSpend / tSales * 100 : null;
+    items.push(['Ad Spend', state.currency + tSpend.toLocaleString('en', {maximumFractionDigits:0})]);
+    items.push(['Ad Sales', state.currency + tSales.toLocaleString('en', {maximumFractionDigits:0})]);
+    items.push(['ACOS', tAcos ? tAcos.toFixed(1) + '%' : '–']);
+  }
+
+  row.innerHTML = items.map(([label, value]) =>
+    `<div class="kpi-card"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div></div>`
+  ).join('');
+  row.style.display = 'flex';
+}
+
+function getKwHeaders() {
+  const h = ['Search Query', 'ASINs', 'Search Query Volume', 'Total Impr.', 'ASIN Impr.', 'ASIN Impr. Share',
+             'Total Clicks', 'ASIN Clicks', 'ASIN Click Share', 'Overall CTR', 'ASIN CTR',
+             'ASIN Purchases', 'ASIN Purch. Share'];
+  if (state.hasAds) h.push('Ad Clicks', 'Ad Spend', 'Ad Sales', 'ACOS', 'Ad Orders');
+  return h;
+}
+
+function kwRowToArr(r) {
+  const row = [
+    fmtK(r.Keyword), fmtN(r.N_ASINs), fmtN(r.SQV), fmtN(r.T_Impr), fmtN(r.A_Impr),
+    fmtP(r.A_ImprShare), fmtN(r.T_Clicks), fmtN(r.A_Clicks), fmtP(r.A_ClickShare),
+    fmtP(r.Overall_CTR), fmtP(r.ASIN_CTR), fmtN(r.A_Purch), fmtP(r.A_PurchShare),
+  ];
+  if (state.hasAds) {
+    row.push(fmtN(r.Ad_Clicks), fmtM(r.Ad_Spend), fmtM(r.Ad_Sales), fmtP(r.Ad_ACOS, 1), fmtN(r.Ad_Orders));
+  }
+  return row;
+}
+
+function renderKwTable() {
+  const filterText = (document.getElementById('kw-filter').value || '').trim().toLowerCase();
+  state.filteredKw = filterText
+    ? state.kw.filter(r => r.Keyword.includes(filterText))
+    : state.kw;
+
+  // Deselect if filtered out
+  if (state.selectedKw && !state.filteredKw.find(r => r.Keyword === state.selectedKw)) {
+    state.selectedKw = null;
+    document.getElementById('drilldown-section').style.display = 'none';
+  }
+
+  document.getElementById('table-caption').textContent = `${state.filteredKw.length.toLocaleString()} keywords`;
+
+  const headers = getKwHeaders();
+  document.getElementById('kw-thead').innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+  const tbody = document.getElementById('kw-tbody');
+  tbody.innerHTML = state.filteredKw.map((r, i) => {
+    const cells = kwRowToArr(r).map((v, ci) => `<td>${v}</td>`).join('');
+    const sel = state.selectedKw === r.Keyword ? ' class="selected"' : '';
+    return `<tr${sel} data-kw="${escHtml(r.Keyword)}" onclick="selectKw(this,'${escHtml(r.Keyword)}')">${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('main-section').style.display = 'block';
+}
+
+function selectKw(tr, kw) {
+  // Clear previous selection
+  document.querySelectorAll('#kw-tbody tr').forEach(r => r.classList.remove('selected'));
+  tr.classList.add('selected');
+  state.selectedKw = kw;
+  renderDrilldown(kw);
+  document.getElementById('drilldown-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderDrilldown(kw) {
+  const section = document.getElementById('drilldown-section');
+  section.style.display = 'block';
+
+  document.getElementById('drilldown-header').innerHTML =
+    `<span class="kw-name">📋 ${fmtK(kw)}</span><span class="kw-sub">— per-ASIN breakdown</span>`;
+
+  // Organic ASIN table
+  const asinRows = state.sqpRows
+    .filter(r => r.Keyword === kw)
+    .sort((a, b) => (b.A_Impr || 0) - (a.A_Impr || 0));
+
+  const asinHeaders = ['ASIN','ASIN Impr.','ASIN Impr. Share','ASIN Clicks','ASIN Click Share',
+                        'ASIN CTR','ASIN Cart Adds','ASIN Cart Share','ASIN Purchases','ASIN Purch. Share','ASIN CVR'];
+  document.getElementById('asin-thead').innerHTML = '<tr>' + asinHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  document.getElementById('asin-tbody').innerHTML = asinRows.map(r => `
+    <tr>
+      <td>${r.ASIN}</td>
+      <td>${fmtN(r.A_Impr)}</td><td>${fmtP(r.A_ImprShare)}</td>
+      <td>${fmtN(r.A_Clicks)}</td><td>${fmtP(r.A_ClickShare)}</td>
+      <td>${fmtP(r.ASIN_CTR)}</td>
+      <td>${fmtN(r.A_Carts)}</td><td>${fmtP(r.A_CartShare)}</td>
+      <td>${fmtN(r.A_Purch)}</td><td>${fmtP(r.A_PurchShare)}</td>
+      <td>${fmtP(r.ASIN_CVR)}</td>
+    </tr>`).join('');
+
+  // Ads section
+  const adsSection = document.getElementById('ads-section');
+  const adsHint    = document.getElementById('ads-hint');
+  if (state.hasAds) {
+    adsSection.style.display = 'block';
+    adsHint.style.display    = 'none';
+    document.getElementById('chk-only-uploaded').checked = false;
+    renderAdsTable();
+  } else {
+    adsSection.style.display = 'none';
+    adsHint.style.display    = 'block';
+  }
+}
+
+function renderAdsTable() {
+  const kw = state.selectedKw;
+  if (!kw) return;
+
+  const kwAds = state.stisAgg.filter(r => r.Keyword === kw);
+  const empty   = document.getElementById('ads-empty');
+  const tableWrap = document.getElementById('ads-table-wrap');
+
+  if (!kwAds.length) {
+    empty.textContent = 'No ad activity found for this keyword in the STIS report.';
+    empty.style.display = 'block';
+    tableWrap.style.display = 'none';
+    return;
+  }
+  empty.style.display    = 'none';
+  tableWrap.style.display = 'block';
+
+  // Join with campAsin
+  let joined = kwAds.flatMap(ad => {
+    const asins = state.campAsin.filter(c => c.Campaign === ad.Campaign);
+    if (!asins.length) return [{ ...ad, ASIN: '(no ASIN match)', Campaign_ASIN_Count: 0 }];
+    return asins.map(c => ({ ...ad, ASIN: c.ASIN, Campaign_ASIN_Count: c.Campaign_ASIN_Count }));
+  });
+
+  const onlyUploaded = document.getElementById('chk-only-uploaded').checked;
+  if (onlyUploaded) joined = joined.filter(r => state.uploadedAsins.includes(r.ASIN));
+
+  joined.sort((a, b) => a.ASIN.localeCompare(b.ASIN) || (b.Spend || 0) - (a.Spend || 0));
+
+  const adsHeaders = ['ASIN','Campaign','ASINs in Camp.','Impressions','Clicks','CTR','CPC','Spend','Sales','ACOS','Orders'];
+  document.getElementById('ads-thead').innerHTML = '<tr>' + adsHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  document.getElementById('ads-tbody').innerHTML = joined.map(r => `
+    <tr>
+      <td>${r.ASIN}</td>
+      <td style="text-align:left;max-width:220px;white-space:normal;word-break:break-word;">${r.Campaign}</td>
+      <td>${fmtN(r.Campaign_ASIN_Count)}</td>
+      <td>${fmtN(r.Impressions)}</td>
+      <td>${fmtN(r.Clicks)}</td>
+      <td>${fmtP(r.CTR)}</td>
+      <td>${fmtM(r.CPC)}</td>
+      <td>${fmtM(r.Spend)}</td>
+      <td>${fmtM(r.Sales)}</td>
+      <td>${fmtP(r.ACOS, 1)}</td>
+      <td>${fmtN(r.Orders)}</td>
+    </tr>`).join('');
+
+  const multiCount = joined.filter(r => r.Campaign_ASIN_Count > 1).length;
+  document.getElementById('ads-caption').textContent = multiCount
+    ? `⚠️ Ad metrics are keyword × campaign level. When a campaign advertises multiple ASINs ('ASINs in Camp.' > 1), the same campaign metrics are shown against each of its ASINs — Amazon does not split keyword traffic per ASIN.`
+    : '';
+
+  if (joined.length === 0) {
+    empty.textContent = 'No campaigns for this keyword advertise the uploaded ASINs.';
+    empty.style.display = 'block';
+    tableWrap.style.display = 'none';
+  }
+}
+
+function onFilter() {
+  renderKwTable();
+}
+
+// ─── Export helpers ───────────────────────────────────────────────────────────
+function tableToCSV(headers, rows2d) {
+  const escape = v => `"${String(v).replace(/"/g, '""')}"`;
+  return [headers, ...rows2d].map(r => r.map(escape).join(',')).join('\n');
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function exportMain() {
+  const headers = getKwHeaders();
+  const rows = state.filteredKw.map(r => kwRowToArr(r));
+  downloadCSV(tableToCSV(headers, rows), 'keyword_asin_summary.csv');
+}
+
+function exportAsin() {
+  const kw = state.selectedKw;
+  if (!kw) return;
+  const headers = ['ASIN','ASIN Impr.','ASIN Impr. Share','ASIN Clicks','ASIN Click Share',
+                   'ASIN CTR','ASIN Cart Adds','ASIN Cart Share','ASIN Purchases','ASIN Purch. Share','ASIN CVR'];
+  const rows = state.sqpRows.filter(r => r.Keyword === kw)
+    .sort((a,b) => (b.A_Impr||0) - (a.A_Impr||0))
+    .map(r => [r.ASIN, fmtN(r.A_Impr), fmtP(r.A_ImprShare), fmtN(r.A_Clicks), fmtP(r.A_ClickShare),
+               fmtP(r.ASIN_CTR), fmtN(r.A_Carts), fmtP(r.A_CartShare), fmtN(r.A_Purch), fmtP(r.A_PurchShare), fmtP(r.ASIN_CVR)]);
+  downloadCSV(tableToCSV(headers, rows), `asin_breakdown_${kw.replace(/ /g,'_')}.csv`);
+}
+
+function exportAds() {
+  const kw = state.selectedKw;
+  if (!kw || !state.hasAds) return;
+  const headers = ['ASIN','Campaign','ASINs in Camp.','Impressions','Clicks','CTR','CPC','Spend','Sales','ACOS','Orders'];
+  let joined = state.stisAgg.filter(r => r.Keyword === kw).flatMap(ad => {
+    const asins = state.campAsin.filter(c => c.Campaign === ad.Campaign);
+    if (!asins.length) return [{ ...ad, ASIN: '(no ASIN match)', Campaign_ASIN_Count: 0 }];
+    return asins.map(c => ({ ...ad, ASIN: c.ASIN, Campaign_ASIN_Count: c.Campaign_ASIN_Count }));
+  });
+  if (document.getElementById('chk-only-uploaded').checked)
+    joined = joined.filter(r => state.uploadedAsins.includes(r.ASIN));
+  const rows = joined.map(r => [r.ASIN, r.Campaign, fmtN(r.Campaign_ASIN_Count),
+    fmtN(r.Impressions), fmtN(r.Clicks), fmtP(r.CTR), fmtM(r.CPC),
+    fmtM(r.Spend), fmtM(r.Sales), fmtP(r.ACOS,1), fmtN(r.Orders)]);
+  downloadCSV(tableToCSV(headers, rows), `ads_breakdown_${kw.replace(/ /g,'_')}.csv`);
+}
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+function resetAll() {
+  state.sqpFiles = []; state.stisFile = null; state.advFile = null;
+  state.sqpRows = []; state.kw = []; state.stisAgg = []; state.campAsin = [];
+  state.uploadedAsins = []; state.weeks = []; state.selectedKw = null; state.hasAds = false;
+  ['list-sqp','list-stis','list-adv'].forEach(id => document.getElementById(id).innerHTML = '');
+  ['input-sqp','input-stis','input-adv'].forEach(id => document.getElementById(id).value = '');
+  clearAlerts();
+  document.getElementById('summary-strip').style.display = 'none';
+  document.getElementById('kpi-row').style.display = 'none';
+  document.getElementById('main-section').style.display = 'none';
+  document.getElementById('main-divider').style.display = 'none';
+  document.getElementById('drilldown-section').style.display = 'none';
+  document.getElementById('btn-reset').style.display = 'none';
+  document.getElementById('kw-filter').value = '';
+}
+
+// ─── Alerts ───────────────────────────────────────────────────────────────────
+function clearAlerts() { document.getElementById('alerts').innerHTML = ''; }
+function showAlert(msg, type='info') {
+  const cls = type === 'warn' ? 'alert warn' : type === 'error' ? 'alert error' : 'alert';
+  document.getElementById('alerts').innerHTML += `<div class="${cls}">${msg}</div>`;
+}
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ─── Tracking ─────────────────────────────────────────────────────────────────
+const _userName    = sessionStorage.getItem('userName')    || 'Unknown';
+const _userProject = sessionStorage.getItem('userProject') || 'Unknown';
+
+function _track(action) {
+  const params = new URLSearchParams({
+    name: _userName, project: _userProject, tool: TOOL_NAME, action,
+    date: new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}),
+    time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+  });
+  const img = new Image();
+  img.src = WEBHOOK_URL + '?' + params.toString();
+}
+
+_track('Opened');
+setInterval(() => _track('Heartbeat'), 60000);
+
+let _idleTimer;
+function _resetIdle() {
+  clearTimeout(_idleTimer);
+  _idleTimer = setTimeout(() => { _track('Idle'); document.addEventListener('mousemove', _onResume, {once:true}); }, 600000);
+}
+function _onResume() { _track('Resumed'); _resetIdle(); }
+document.addEventListener('mousemove', _resetIdle);
+document.addEventListener('keydown', _resetIdle);
+_resetIdle();
+</script>
+</body>
+</html>
