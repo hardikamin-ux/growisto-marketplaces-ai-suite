@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search Term Comparative View | Growisto</title>
+<link rel="icon" type="image/png" href="../assets/growisto-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+.gwnav{background:#fff;border-bottom:1px solid var(--powder);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.gwnav img{height:26px}
+.gwnav .badge{background:var(--teal);color:#fff;font-size:10px;font-weight:600;letter-spacing:.05em;padding:4px 12px;border-radius:20px;text-transform:uppercase}
+.backlink{display:inline-flex;align-items:center;gap:6px;color:var(--teal);font-size:12px;font-weight:600;text-decoration:none;margin-bottom:14px}
+.backlink:hover{text-decoration:underline}
+
+:root{--bg:#F6F6F4;--card:#fff;--ink:#1D1D20;--mut:#6b7684;--line:#B8DBD9;--brand:#367588;--red:#E35D34;--redbg:#FBEAE4;--grn:#1e8449;--grnbg:#e9f7ef;--amber:#b9770e;--teal:#367588;--powder:#B8DBD9;--flame:#E35D34}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Poppins',-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 20px 60px}
+h1{font-size:20px;margin:0 0 2px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:16px}
+.sub b{color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .lab{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+.kpi .val{font-size:20px;font-weight:700;margin-top:4px}
+.kpi .val .arrow{color:var(--mut);font-weight:400;font-size:14px;margin:0 5px}
+.kpi .chg{font-size:12px;font-weight:600;margin-top:3px}
+.up{color:var(--grn)} .down{color:var(--red)}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.sec h2{font-size:14px;margin:0 0 10px;color:var(--brand)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--card)}
+th.l,td.l{text-align:left}
+th:hover{color:var(--brand)}
+td.term{min-width:300px;max-width:440px;white-space:normal;word-break:break-word;line-height:1.3}
+tr:hover td{background:#fafbfc}
+.pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.p-both{background:#eef1f6;color:#55606e}.p-new{background:var(--grnbg);color:var(--grn)}.p-dropped{background:var(--redbg);color:var(--red)}
+.d-neg{color:var(--red);font-weight:600}.d-pos{color:var(--grn);font-weight:600}.d-zero{color:var(--mut)}
+.chip{cursor:pointer}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.controls input,.controls select{padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;background:#fff}
+.controls input[type=search]{min-width:230px}
+.btn{padding:7px 11px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;font-size:12px}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.meta{color:var(--mut);font-size:12px;margin-left:auto}
+.tablewrap{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;color:var(--mut)}
+.pager button{padding:5px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.grpsep{border-left:2px solid #d7dde6}
+.expand{cursor:pointer}
+.caret{display:inline-block;width:12px;color:var(--mut)}
+.cc{color:var(--mut);font-weight:400;font-size:11px}
+.camprow td{background:#fbfcfe;font-size:11px;border-bottom:1px dotted #e9edf2}
+.camprow td.cn{color:#55606e;font-style:italic;padding-left:20px;white-space:normal;word-break:break-word;min-width:340px;max-width:460px;line-height:1.35}
+.note{font-size:11px;color:var(--mut);margin-top:8px}
+.hl{font-weight:600}
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--line)}
+.tab{padding:9px 18px;cursor:pointer;font-weight:600;color:var(--mut);border:0;background:none;font-size:13px;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand)}
+.tabpane[hidden]{display:none}
+.frow{display:flex;align-items:center;gap:10px;margin-top:8px}
+.frow label{min-width:180px;color:var(--ink);font-weight:600}
+.stepnum{color:var(--brand);font-weight:700}
+#status.err{color:var(--red);font-weight:600}
+#status.ok{color:var(--grn)}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+</style></head>
+<body>
+<div class="gwnav">
+  <img src="../assets/growisto-logo.png" alt="Growisto" />
+  <span class="badge">Marketplaces AI Suite</span>
+</div>
+<div class="wrap">
+<a class="backlink" href="/">&#8249; Back to Suite</a>
+<h1>Search Term Comparative View</h1>
+<div class="sub">Upload the three Sponsored Products reports, choose two date ranges, and build the comparison across <b>Search Terms</b>, <b>Placements</b>, and <b>ASINs</b> — same layout as the approved dashboard.</div>
+
+<div id="setup" class="sec" style="max-width:860px">
+ <div style="display:grid;gap:16px">
+  <div>
+   <div><span class="stepnum">1.</span> <b>Reports</b> <span class="meta" style="margin:0;font-weight:400">(.xlsx exports from Amazon Ads)</span></div>
+   <div class="frow"><label>Search Term report</label><input type="file" id="fS" accept=".xlsx,.xls,.csv"></div>
+   <div class="frow"><label>Placement report</label><input type="file" id="fP" accept=".xlsx,.xls,.csv"></div>
+   <div class="frow"><label>Advertised Product report</label><input type="file" id="fA" accept=".xlsx,.xls,.csv"></div>
+  </div>
+  <div>
+   <div><span class="stepnum">2.</span> <b>Date ranges to compare</b></div>
+   <div class="frow"><label>Period 1 (baseline)</label><input type="date" id="p1s" value="2026-07-13"> <span>to</span> <input type="date" id="p1e" value="2026-07-16"></div>
+   <div class="frow"><label>Period 2 (recent)</label><input type="date" id="p2s" value="2026-07-20"> <span>to</span> <input type="date" id="p2e" value="2026-07-23"></div>
+  </div>
+  <div>
+   <button class="btn on" id="buildBtn" style="padding:10px 20px;font-size:13px">Build dashboard →</button>
+   <span id="status" class="meta" style="margin-left:14px;font-weight:600"></span>
+  </div>
+ </div>
+ <div class="note" style="margin-top:14px">Everything runs in your browser — no data leaves this page. Needs an internet connection the first time you open it (to load the spreadsheet reader). CTR = Clicks/Impressions · CVR = Units/Clicks · Off Amazon placements are excluded.</div>
+</div>
+
+<div id="rebuildBar" hidden style="margin-bottom:14px"><button class="btn" id="rebuildBtn">↺ New comparison (change files / dates)</button></div>
+<div id="dash" hidden></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const gid=s=>document.getElementById(s);
+const fmtN=n=>Math.round(n).toLocaleString('en-IN');
+const fmtR=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const pct=n=>n.toFixed(2)+'%';
+const roas=n=>n.toFixed(2)+'x';
+const cpc=n=>'₹'+n.toFixed(2);
+const rnd=x=>Math.round(x*100)/100;
+const darrow=v=>v<0?'▼':v>0?'▲':'';
+// uniform delta coloring: increase = green, decrease = red
+function dCol(v){return v>0?'d-pos':v<0?'d-neg':'d-zero';}
+function dtd(v,unit){const s=(v>=0?'+':'')+v.toFixed(2)+(unit||'');return `<td class="${dCol(v)}">${s}</td>`;}
+function dCpcTD(v){return `<td class="${dCol(v)}">${(v>=0?'+':'-')+'₹'+Math.abs(v).toFixed(2)}</td>`;}
+function dCurTD(v){return `<td class="${dCol(v)}">${(v>=0?'+':'-')+'₹'+fmtN(Math.abs(v))}</td>`;}
+function dRoasTD(v){return `<td class="${dCol(v)}">${(v>=0?'+':'')+v.toFixed(2)+'x'}</td>`;}
+
+function status(msg,cls){const s=gid('status');s.textContent=msg||'';s.className='meta '+(cls||'');}
+window.addEventListener('error',e=>{status('Error: '+(e.message||e.error),'err');});
+
+// ---------- parsing ----------
+function num(v){if(typeof v==='number')return isNaN(v)?0:v;const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
+function toDay(v){
+ if(v instanceof Date && !isNaN(v)) return v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');
+ if(typeof v==='number'){const d=new Date(Date.UTC(1899,11,30)+Math.round(v)*86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}
+ const s=String(v||'');const m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];
+ const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return '';
+}
+function resolveCols(sample){
+ const keys=Object.keys(sample);
+ const find=cands=>{for(const k of keys){const t=k.trim();for(const c of cands){if(typeof c==='string'){if(t===c)return k;}else if(c.test(t))return k;}}return null;};
+ return {pf:find(['Portfolio name','Portfolio']),camp:find(['Campaign Name','Campaign']),
+   term:find(['Customer Search Term','Search Term']),plc:find(['Placement']),
+   asin:find(['Advertised ASIN','ASIN']),date:find(['Date']),
+   impr:find(['Impressions']),clk:find(['Clicks']),spend:find(['Spend']),
+   sales:find([/^14 Day Total Sales$/,/Total Sales/]),
+   orders:find([/^14 Day Total Orders/,/Total Orders/]),
+   units:find([/^14 Day Total Units/,/Total Units/])};
+}
+function normalize(raw,type){
+ if(!raw||!raw.length) throw new Error('the '+type+' report appears to be empty');
+ const c=resolveCols(raw[0]);
+ const miss=['pf','camp','date','impr','clk','spend','sales','units'].filter(k=>!c[k]);
+ if(miss.length) throw new Error('the '+type+" report is missing expected columns ("+miss.join(', ')+"). Is it the right file?");
+ if(type==='search'&&!c.term) throw new Error('the Search Term report has no "Customer Search Term" column.');
+ if(type==='asin'&&!c.asin) throw new Error('the Advertised Product report has no "Advertised ASIN" column.');
+ if(type==='place'&&!c.plc) throw new Error('the Placement report has no "Placement" column.');
+ const out=[];
+ for(const row of raw){
+  const plc=c.plc?row[c.plc]:null;
+  if(type==='place'&&plc&&String(plc).toLowerCase().includes('off amazon')) continue;
+  out.push({pf:(row[c.pf]||'(no portfolio)'),camp:(row[c.camp]||'(no campaign)'),
+    term:c.term?(row[c.term]||'(none)'):null,plc:plc?String(plc):null,asin:c.asin?String(row[c.asin]||'(none)'):null,
+    d:toDay(row[c.date]),i:num(row[c.impr]),c:num(row[c.clk]),sp:num(row[c.spend]),
+    sa:num(row[c.sales]),o:num(c.orders?row[c.orders]:0),u:num(row[c.units])});
+ }
+ return out;
+}
+// ---------- aggregation ----------
+function Z(){return {i:0,c:0,sp:0,sa:0,o:0,u:0};}
+function agg(recs,fields){
+ const m=new Map();
+ for(const r of recs){const kv=fields.map(f=>r[f]);const key=kv.join('');
+  let o=m.get(key);if(!o){o={_k:kv,i:0,c:0,sp:0,sa:0,o:0,u:0};m.set(key,o);}
+  o.i+=r.i;o.c+=r.c;o.sp+=r.sp;o.sa+=r.sa;o.o+=r.o;o.u+=r.u;}
+ return m;
+}
+function metrics(o,a,b){
+ o.i1=Math.round(a.i);o.i2=Math.round(b.i);o.c1=Math.round(a.c);o.c2=Math.round(b.c);
+ o.u1=Math.round(a.u);o.u2=Math.round(b.u);o.s1=Math.round(a.sp);o.s2=Math.round(b.sp);
+ o.sa1=Math.round(a.sa);o.sa2=Math.round(b.sa);
+ o.ctr1=a.i?rnd(a.c/a.i*100):0;o.ctr2=b.i?rnd(b.c/b.i*100):0;
+ o.cvr1=a.c?rnd(a.u/a.c*100):0;o.cvr2=b.c?rnd(b.u/b.c*100):0;
+ o.cpc1=a.c?rnd(a.sp/a.c):0;o.cpc2=b.c?rnd(b.sp/b.c):0;
+ o.r1=a.sp?rnd(a.sa/a.sp):0;o.r2=b.sp?rnd(b.sa/b.sp):0;
+ o.dctr=rnd(o.ctr2-o.ctr1);o.dcvr=rnd(o.cvr2-o.cvr1);o.dcpc=rnd(o.cpc2-o.cpc1);
+ o.ds=Math.round(o.s2-o.s1);o.dsa=Math.round(o.sa2-o.sa1);o.dr=rnd(o.r2-o.r1);
+ o.cc=o.c1+o.c2;o.sc=o.s1+o.s2;return o;
+}
+function buildTab(records,dimF,subF,p1,p2){
+ const r1=records.filter(r=>r.d>=p1[0]&&r.d<=p1[1]);
+ const r2=records.filter(r=>r.d>=p2[0]&&r.d<=p2[1]);
+ const P1=agg(r1,['pf',dimF]),P2=agg(r2,['pf',dimF]);
+ const keys=new Set([...P1.keys(),...P2.keys()]);
+ const rows=[],keymap={};let id=0;
+ for(const k of keys){
+  const a=P1.get(k)||Z(),b=P2.get(k)||Z();const kv=(P1.get(k)||P2.get(k))._k;
+  const inP1=(a.i+a.c+a.sp)>0,inP2=(b.i+b.c+b.sp)>0;
+  const st=inP1&&inP2?'Both':(inP2?'New':'Dropped');
+  const o={pf:kv[0],t:String(kv[1]),st,id};metrics(o,a,b);rows.push(o);
+  keymap[k]=id;id++;
+ }
+ const S1=agg(r1,['pf',dimF,subF]),S2=agg(r2,['pf',dimF,subF]);
+ const skeys=new Set([...S1.keys(),...S2.keys()]);
+ const camps={};
+ for(const k of skeys){
+  const a=S1.get(k)||Z(),b=S2.get(k)||Z();const kv=(S1.get(k)||S2.get(k))._k;
+  const pkey=kv[0]+''+kv[1];const pid=keymap[pkey];if(pid===undefined)continue;
+  const o={c:String(kv[2])};metrics(o,a,b);(camps[pid]=camps[pid]||[]).push(o);
+ }
+ for(const k in camps) camps[k].sort((x,y)=>y.sc-x.sc);
+ return {rows,camps};
+}
+function summarize(records,p1,p2){
+ const r1=records.filter(r=>r.d>=p1[0]&&r.d<=p1[1]);
+ const r2=records.filter(r=>r.d>=p2[0]&&r.d<=p2[1]);
+ const sa=recs=>recs.reduce((o,r)=>{o.i+=r.i;o.c+=r.c;o.sp+=r.sp;o.sa+=r.sa;o.o+=r.o;o.u+=r.u;return o;},Z());
+ const overall=metrics({},sa(r1),sa(r2));
+ const A1=agg(r1,['pf']),A2=agg(r2,['pf']);const pks=new Set([...A1.keys(),...A2.keys()]);
+ const portfolios=[];
+ for(const k of pks){const a=A1.get(k)||Z(),b=A2.get(k)||Z();const o={pf:(A1.get(k)||A2.get(k))._k[0]};metrics(o,a,b);portfolios.push(o);}
+ portfolios.sort((x,y)=>y.s2-x.s2);
+ return {overall,portfolios};
+}
+
+// ---------- table columns + rendering ----------
+const COLS=[['pf','Portfolio','l'],['t','Search Term','l'],['st','Status','l'],
+ ['c1','Clk P1'],['c2','Clk P2'],['ctr1','CTR P1'],['ctr2','CTR P2'],['dctr','ΔCTR pp'],
+ ['cvr1','CVR P1'],['cvr2','CVR P2'],['dcvr','ΔCVR pp'],
+ ['cpc1','CPC P1'],['cpc2','CPC P2'],['dcpc','ΔCPC ₹'],
+ ['s1','Spend P1'],['s2','Spend P2'],['ds','ΔSpend'],['sa1','Sales P1'],['sa2','Sales P2'],['dsa','ΔSales'],['r1','ROAS P1'],['r2','ROAS P2'],['dr','ΔROAS']];
+const PAGE=100;
+function cell(r,k,camps,exp){
+ if(k==='pf')return `<td class="l" style="color:var(--mut)">${r.pf}</td>`;
+ if(k==='t'){const n=(camps[r.id]||[]).length;const op=exp.has(r.id);return `<td class="l term hl expand" data-id="${r.id}" title="${r.t}"><span class="caret">${op?'▾':'▸'}</span>${r.t} <span class="cc">(${n})</span></td>`;}
+ if(k==='st')return `<td class="l"><span class="pill p-${r.st.toLowerCase()}">${r.st}</span></td>`;
+ if(k==='dctr'||k==='dcvr')return dtd(r[k],'');
+ if(k==='dcpc')return dCpcTD(r[k]);
+ if(k==='ds'||k==='dsa')return dCurTD(r[k]);
+ if(k==='dr')return dRoasTD(r[k]);
+ if(k==='ctr1'||k==='ctr2'||k==='cvr1'||k==='cvr2')return `<td>${pct(r[k])}</td>`;
+ if(k==='cpc1'||k==='cpc2')return `<td>${cpc(r[k])}</td>`;
+ if(k==='r1'||k==='r2')return `<td>${roas(r[k])}</td>`;
+ if(k==='s1'||k==='s2'||k==='sa1'||k==='sa2')return `<td>${fmtR(r[k])}</td>`;
+ return `<td>${fmtN(r[k])}</td>`;
+}
+function makeTable(cfg){
+ const rows=cfg.rows,camps=cfg.camps||{},noun=cfg.noun,csvName=cfg.csvName,id=cfg.ids,g=s=>document.querySelector(s);
+ const COLS2=COLS.map(c=>c[0]==='t'?['t',cfg.dimLabel,'l']:c);
+ const exp=new Set();const st={sort:'sc',dir:-1,page:0,filtered:[]};
+ function applyFilter(){
+  const q=g(id.q).value.trim().toLowerCase(),pf=g(id.pf).value,stt=g(id.stat).value,mc=+g(id.minc).value||0;
+  st.filtered=rows.filter(r=>(!pf||r.pf===pf)&&(!stt||r.st===stt)&&(!q||r.t.toLowerCase().includes(q))&&(Math.max(r.c1,r.c2)>=mc));
+  st.filtered.sort((a,b)=>{const A=a[st.sort],B=b[st.sort];return (A>B?1:A<B?-1:0)*st.dir;});
+  st.page=Math.min(st.page,Math.max(0,Math.ceil(st.filtered.length/PAGE)-1));
+ }
+ function syncSortUI(){const has=[...g(id.sortby).options].some(o=>o.value===st.sort);g(id.sortby).value=has?st.sort:'';g(id.order).value=String(st.dir);}
+ function render(){
+  applyFilter();
+  let h='<thead><tr>'+COLS2.map(c=>`<th class="${c[2]||''} ${['ctr1','cvr1','cpc1','s1','sa1','r1'].includes(c[0])?'grpsep':''}" data-k="${c[0]}">${c[1]}${st.sort===c[0]?(st.dir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
+  const start=st.page*PAGE,slice=st.filtered.slice(start,start+PAGE);
+  slice.forEach(r=>{
+   h+='<tr>'+COLS2.map(c=>cell(r,c[0],camps,exp)).join('')+'</tr>';
+   if(exp.has(r.id)){const cs=camps[r.id]||[];
+    if(!cs.length){h+='<tr class="camprow"><td></td><td class="l cn">— no detail —</td>'+COLS2.slice(2).map(()=>'<td></td>').join('')+'</tr>';}
+    cs.forEach(cm=>{let cells='<td class="l"></td><td class="l cn" title="'+cm.c.replace(/"/g,'&quot;')+'">↳ '+cm.c+'</td><td></td>';cells+=COLS2.slice(3).map(c=>cell(cm,c[0],camps,exp)).join('');h+='<tr class="camprow">'+cells+'</tr>';});
+   }
+  });
+  h+='</tbody>';g(id.tbl).innerHTML=h;
+  g(id.tbl).querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;st.dir=(st.sort===k?-st.dir:-1);st.sort=k;st.page=0;syncSortUI();render();});
+  g(id.tbl).querySelectorAll('.expand').forEach(el=>el.onclick=e=>{e.stopPropagation();const x=+el.dataset.id;exp.has(x)?exp.delete(x):exp.add(x);render();});
+  g(id.cnt).textContent=fmtN(st.filtered.length)+' '+noun+' match';
+  const tp=Math.max(1,Math.ceil(st.filtered.length/PAGE));
+  g(id.pinfo).textContent='Page '+(st.page+1)+' / '+tp+' (showing '+slice.length+')';
+ }
+ [id.q,id.pf,id.stat,id.minc].forEach(s=>g(s).addEventListener('input',()=>{st.page=0;render();}));
+ g(id.sortby).addEventListener('change',()=>{if(g(id.sortby).value){st.sort=g(id.sortby).value;st.page=0;render();}});
+ g(id.order).addEventListener('change',()=>{st.dir=+g(id.order).value;st.page=0;render();});
+ g(id.prev).onclick=()=>{if(st.page>0){st.page--;render();}};
+ g(id.next).onclick=()=>{const tp=Math.ceil(st.filtered.length/PAGE);if(st.page<tp-1){st.page++;render();}};
+ g(id.csv).onclick=()=>{const hdr=COLS2.map(c=>c[1]);const lines=[hdr.join(',')];st.filtered.forEach(r=>lines.push(COLS2.map(c=>{let v=r[c[0]];if(typeof v==='string')v='"'+v.replace(/"/g,'""')+'"';return v;}).join(',')));const b=new Blob([lines.join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=csvName;a.click();};
+ [...new Set(rows.map(r=>r.pf))].sort().forEach(p=>{const o=document.createElement('option');o.value=o.textContent=p;g(id.pf).appendChild(o);});
+ return {render,setPortfolio(pf){g(id.pf).value=pf;st.page=0;render();}};
+}
+function renderKPIs(OV){
+ const kdef=[['CTR',pct(OV.ctr1),pct(OV.ctr2),OV.dctr,'pp'],['CVR',pct(OV.cvr1),pct(OV.cvr2),OV.dcvr,'pp'],
+  ['CPC',cpc(OV.cpc1),cpc(OV.cpc2),OV.cpc1?((OV.cpc2-OV.cpc1)/OV.cpc1*100):0,'%'],
+  ['Spend',fmtR(OV.s1),fmtR(OV.s2),OV.s1?((OV.s2-OV.s1)/OV.s1*100):0,'%'],
+  ['Ad Sales',fmtR(OV.sa1),fmtR(OV.sa2),OV.sa1?((OV.sa2-OV.sa1)/OV.sa1*100):0,'%'],
+  ['ROAS',roas(OV.r1),roas(OV.r2),OV.r1?((OV.r2-OV.r1)/OV.r1*100):0,'%']];
+ gid('kpis').innerHTML=kdef.map(k=>{const cls=k[3]>0?'up':k[3]<0?'down':'';const cv=k[4]==='pp'?(k[3]>=0?'+':'')+k[3].toFixed(2)+' pp':(k[3]>=0?'+':'')+k[3].toFixed(1)+'%';
+  return `<div class="kpi"><div class="lab">${k[0]}</div><div class="val">${k[1]}<span class="arrow">→</span>${k[2]}</div><div class="chg ${cls}">${darrow(k[3])} ${cv}</div></div>`;}).join('');
+}
+function renderPf(PF,onChip){
+ let pfSort={k:'s2',dir:-1};
+ function draw(){
+  PF.sort((a,b)=>(a[pfSort.k]>b[pfSort.k]?1:-1)*pfSort.dir);
+  const cols=[['pf','Portfolio','l'],['c1','Clk P1'],['c2','Clk P2'],['ctr1','CTR P1'],['ctr2','CTR P2'],['dctr','ΔCTR'],['cvr1','CVR P1'],['cvr2','CVR P2'],['dcvr','ΔCVR'],['cpc1','CPC P1'],['cpc2','CPC P2'],['dcpc','ΔCPC'],['s1','Spend P1'],['s2','Spend P2'],['ds','ΔSpend'],['sa1','Sales P1'],['sa2','Sales P2'],['dsa','ΔSales'],['r1','ROAS P1'],['r2','ROAS P2'],['dr','ΔROAS']];
+  let h='<thead><tr>'+cols.map(c=>`<th class="${c[2]||''}" data-k="${c[0]}">${c[1]}</th>`).join('')+'</tr></thead><tbody>';
+  PF.forEach(p=>{h+=`<tr class="chip" data-pf="${p.pf}"><td class="l hl">${p.pf}</td><td>${fmtN(p.c1)}</td><td>${fmtN(p.c2)}</td><td>${pct(p.ctr1)}</td><td>${pct(p.ctr2)}</td>${dtd(p.dctr,'')}<td>${pct(p.cvr1)}</td><td>${pct(p.cvr2)}</td>${dtd(p.dcvr,'')}<td>${cpc(p.cpc1)}</td><td>${cpc(p.cpc2)}</td>${dCpcTD(p.dcpc)}<td>${fmtR(p.s1)}</td><td>${fmtR(p.s2)}</td>${dCurTD(p.ds)}<td>${fmtR(p.sa1)}</td><td>${fmtR(p.sa2)}</td>${dCurTD(p.dsa)}<td>${roas(p.r1)}</td><td>${roas(p.r2)}</td>${dRoasTD(p.dr)}</tr>`;});
+  h+='</tbody>';gid('pfTable').innerHTML=h;
+  gid('pfTable').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;pfSort.dir=(pfSort.k===k?-pfSort.dir:-1);pfSort.k=k;draw();});
+  gid('pfTable').querySelectorAll('tr.chip').forEach(tr=>tr.onclick=()=>{onChip(tr.dataset.pf);window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});});
+ }
+ draw();
+}
+function dropTable(sel,clickMin,key,rows){
+ const list=rows.filter(r=>r.c1>=clickMin&&r[key]<0).sort((a,b)=>a[key]-b[key]).slice(0,10);
+ let h='<thead><tr><th class="l">'+(sel.includes('Ctr')?'Search term':'Search term')+'</th><th class="l">Portfolio</th><th>Clk P1</th><th>'+(key==='dctr'?'CTR':'CVR')+' P1</th><th>P2</th><th>Δpp</th><th>CPC P1</th><th>CPC P2</th><th>ΔCPC</th></tr></thead><tbody>';
+ list.forEach(r=>{const v1=key==='dctr'?r.ctr1:r.cvr1,v2=key==='dctr'?r.ctr2:r.cvr2;
+  h+=`<tr><td class="l term" title="${r.t}">${r.t}</td><td class="l" style="color:var(--mut)">${r.pf}</td><td>${fmtN(r.c1)}</td><td>${pct(v1)}</td><td>${pct(v2)}</td><td class="d-neg">${r[key].toFixed(2)}</td><td>${cpc(r.cpc1)}</td><td>${cpc(r.cpc2)}</td>${dCpcTD(r.dcpc)}</tr>`;});
+ h+='</tbody>';if(!list.length)h='<tbody><tr><td class="l" style="color:var(--mut)">No qualifying drops.</td></tr></tbody>';document.querySelector(sel).innerHTML=h;
+}
+// ---------- dashboard skeleton ----------
+function sortOpts(){return '<option value="sc">Spend (both periods)</option><option value="s2">Spend — P2</option><option value="s1">Spend — P1</option><option value="sa2">Ad Sales — P2</option><option value="cc">Clicks (both periods)</option><option value="dctr">CTR change (Δpp)</option><option value="dcvr">CVR change (Δpp)</option><option value="ctr2">CTR — P2</option><option value="cvr2">CVR — P2</option><option value="cpc2">CPC — P2</option><option value="dcpc">CPC change (Δ₹)</option><option value="r2">ROAS — P2</option>';}
+function controls(s,ph,minc){return '<div class="controls">'+
+ '<input type="search" id="q'+s+'" placeholder="'+ph+'">'+
+ '<select id="pf'+s+'"><option value="">All portfolios</option></select>'+
+ '<select id="stat'+s+'"><option value="">All statuses</option><option>Both</option><option>New</option><option>Dropped</option></select>'+
+ '<label>Min clicks <input type="number" id="minc'+s+'" value="'+minc+'" min="0" style="width:70px"></label>'+
+ '<label>Sort by <select id="sortby'+s+'">'+sortOpts()+'</select></label>'+
+ '<select id="order'+s+'"><option value="-1">High → Low</option><option value="1">Low → High</option></select>'+
+ '<button class="btn" id="csv'+s+'">⬇ Export CSV (filtered)</button>'+
+ '<span class="meta" id="cnt'+s+'"></span></div>'+
+ '<div class="tablewrap"><table id="tbl'+s+'"></table></div>'+
+ '<div class="pager"><span id="pinfo'+s+'"></span><button id="prev'+s+'">‹ Prev</button><button id="next'+s+'">Next ›</button></div>';}
+function dashHTML(){return '<div class="sub" id="subline"></div>'+
+ '<div class="tabs"><button class="tab on" data-tab="search">Search Terms</button><button class="tab" data-tab="place">Placements</button><button class="tab" data-tab="asin">ASIN Analysis</button></div>'+
+ '<div id="tab-search" class="tabpane"><div class="kpis" id="kpis"></div>'+
+   '<div class="sec"><h2>Portfolio overview — where the drop is (click a row to filter the table)</h2><div class="tablewrap" style="max-height:none"><table id="pfTable"></table></div><div class="note">Δ in percentage points (pp). Green = up, red = down vs Period 1.</div></div>'+
+   '<div class="grid2"><div class="sec"><h2>Biggest CTR drops <span style="font-weight:400;color:var(--mut)">(≥50 clicks in P1)</span></h2><table id="dropCtr"></table></div><div class="sec"><h2>Biggest CVR drops <span style="font-weight:400;color:var(--mut)">(≥30 clicks in P1)</span></h2><table id="dropCvr"></table></div></div>'+
+   '<div class="sec"><h2>All search terms</h2>'+controls('','Search term contains…',5)+'<div class="note"><b>Click a search term</b> to expand every campaign that triggered it. Δpp = P2−P1. Status: New = only P2, Dropped = only P1.</div></div></div>'+
+ '<div id="tab-place" class="tabpane" hidden><div class="sub" style="margin:2px 0 14px">Portfolio → campaign; click a campaign to expand its placement levels. <b>Off Amazon excluded.</b></div>'+
+   '<div class="sec"><h2>All campaigns (expand for placement levels)</h2>'+controls('2','Campaign contains…',0)+'<div class="note"><b>Click a campaign</b> to expand Top of Search / Rest of search / Product pages.</div></div></div>'+
+ '<div id="tab-asin" class="tabpane" hidden><div class="sub" style="margin:2px 0 14px">Portfolio → campaign; click a campaign to expand the ASINs it advertised (sorted by spend).</div>'+
+   '<div class="sec"><h2>All campaigns (expand for advertised ASINs)</h2>'+controls('3','Campaign contains…',0)+'<div class="note"><b>Click a campaign</b> to expand each ASIN. Spot ASINs advertised in one window but not the other.</div></div></div>';}
+function idset(s){return {q:'#q'+s,pf:'#pf'+s,stat:'#stat'+s,minc:'#minc'+s,sortby:'#sortby'+s,order:'#order'+s,csv:'#csv'+s,tbl:'#tbl'+s,cnt:'#cnt'+s,pinfo:'#pinfo'+s,prev:'#prev'+s,next:'#next'+s};}
+function fmtRange(r){const f=d=>{const p=d.split('-');return p[2]+'/'+p[1]};return f(r[0])+' – '+f(r[1]);}
+function initDashboard(S,P,A,summ,meta){
+ const dash=gid('dash');dash.innerHTML=dashHTML();
+ gid('subline').innerHTML='Comparing <b>'+meta.p1+'</b> vs <b>'+meta.p2+'</b> · CTR = Clicks/Impr · CVR = Units/Clicks · '+fmtN(meta.n)+' search terms';
+ renderKPIs(summ.overall);
+ const searchTable=makeTable({rows:S.rows,camps:S.camps,noun:'terms',csvName:'search_terms.csv',dimLabel:'Search Term',ids:idset('')});
+ const placeTable=makeTable({rows:P.rows,camps:P.camps,noun:'campaigns',csvName:'placements.csv',dimLabel:'Campaign',ids:idset('2')});
+ const asinTable=makeTable({rows:A.rows,camps:A.camps,noun:'campaigns',csvName:'asin_by_campaign.csv',dimLabel:'Campaign',ids:idset('3')});
+ renderPf(summ.portfolios,pf=>searchTable.setPortfolio(pf));
+ dropTable('#dropCtr',50,'dctr',S.rows);dropTable('#dropCvr',30,'dcvr',S.rows);
+ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));const n=t.dataset.tab;gid('tab-search').hidden=n!=='search';gid('tab-place').hidden=n!=='place';gid('tab-asin').hidden=n!=='asin';});
+ searchTable.render();placeTable.render();asinTable.render();
+ gid('setup').hidden=true;dash.hidden=false;gid('rebuildBar').hidden=false;
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+// ---------- build handler ----------
+function readBuf(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>rej(new Error('could not read '+file.name));fr.readAsArrayBuffer(file);});}
+async function parseReport(file){const buf=await readBuf(file);const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];return XLSX.utils.sheet_to_json(ws,{defval:0,raw:true});}
+async function build(){
+ try{
+  if(typeof XLSX==='undefined'){status('Spreadsheet reader not loaded — connect to the internet and reopen this file.','err');return;}
+  const fS=gid('fS').files[0],fP=gid('fP').files[0],fA=gid('fA').files[0];
+  if(!fS||!fP||!fA){status('Please choose all three reports.','err');return;}
+  const p1=[gid('p1s').value,gid('p1e').value],p2=[gid('p2s').value,gid('p2e').value];
+  if(!p1[0]||!p1[1]||!p2[0]||!p2[1]){status('Please set both date ranges.','err');return;}
+  if(p1[0]>p1[1]||p2[0]>p2[1]){status('Each period end must be on/after its start.','err');return;}
+  status('Reading files…');
+  const [rawS,rawP,rawA]=await Promise.all([parseReport(fS),parseReport(fP),parseReport(fA)]);
+  status('Aggregating…');
+  await new Promise(r=>setTimeout(r,20));
+  const recS=normalize(rawS,'search'),recP=normalize(rawP,'place'),recA=normalize(rawA,'asin');
+  const S=buildTab(recS,'term','camp',p1,p2),P=buildTab(recP,'camp','plc',p1,p2),A=buildTab(recA,'camp','asin',p1,p2);
+  if(!S.rows.length&&!P.rows.length&&!A.rows.length){status('No rows fall inside the chosen date ranges — check the dates match the reports.','err');return;}
+  const summ=summarize(recS,p1,p2);
+  initDashboard(S,P,A,summ,{p1:fmtRange(p1),p2:fmtRange(p2),n:S.rows.length});
+  status('');
+ }catch(e){status('Error: '+e.message,'err');console.error(e);}
+}
+gid('buildBtn').onclick=build;
+gid('rebuildBtn').onclick=()=>{gid('setup').hidden=false;gid('dash').hidden=true;gid('rebuildBar').hidden=true;window.scrollTo({top:0,behavior:'smooth'});};
+</script>
+<script>
+  (function() {
+    const TRACKING_URL = 'https://script.google.com/macros/s/AKfycbxf8LQkBGNWOZ7eVYoOvKpcejcbii-ULFaTEsnviP-s4CPxjIFmo7jmXjiTl5JgOLbz/exec';
+    const TOOL_NAME    = 'Search Term Comparative View';
+    const IDLE_MS = 10*60*1000, BEAT_MS = 60*1000;
+    function logEvent(action) {
+      const name=sessionStorage.getItem('gs_name'), project=sessionStorage.getItem('gs_project');
+      if (!name||!project) return;
+      const now=new Date(), _p=new URLSearchParams({date:now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),timestamp:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}),name,project,tool:TOOL_NAME,action});new Image().src=TRACKING_URL+'?'+_p.toString();
+    }
+    let beatTimer,idleTimer,isIdle=false;
+    function startBeat(){clearInterval(beatTimer);beatTimer=setInterval(()=>{if(!isIdle)logEvent('Heartbeat');},BEAT_MS);}
+    function resetIdle(){clearTimeout(idleTimer);if(isIdle){isIdle=false;logEvent('Resumed');startBeat();}idleTimer=setTimeout(()=>{isIdle=true;clearInterval(beatTimer);logEvent('Idle');},IDLE_MS);}
+    ['mousemove','click','keypress','scroll','touchstart'].forEach(e=>document.addEventListener(e,resetIdle,{passive:true}));
+    window.addEventListener('beforeunload',()=>logEvent('Closed'));
+    logEvent('Opened');startBeat();resetIdle();
+  })();
+</script>
+</body></html>
