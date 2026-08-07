@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -15,6 +16,25 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 # survive restarts and redeploys. Locally it defaults to the project folder.
 DATA_ROOT = os.environ.get("DATA_DIR") or BASE
 os.makedirs(DATA_ROOT, exist_ok=True)
+
+
+def _seed_from_bundle():
+    """First boot on an empty volume: copy the profiles/config shipped in the image
+    across, so the team's existing saved profiles survive the move to /data.
+    Never overwrites what's already on the volume."""
+    if os.path.abspath(DATA_ROOT) == os.path.abspath(BASE):
+        return
+    for fn in ("profiles.json", "config.json"):
+        src, dst = os.path.join(BASE, fn), os.path.join(DATA_ROOT, fn)
+        if os.path.exists(src) and not os.path.exists(dst):
+            try:
+                shutil.copy2(src, dst)
+                print(f"seeded {fn} onto the volume")
+            except OSError as e:
+                print(f"could not seed {fn}: {e}")
+
+
+_seed_from_bundle()
 
 CONFIG_FILE   = os.path.join(DATA_ROOT, "config.json")
 PROFILES_FILE = os.path.join(DATA_ROOT, "profiles.json")
