@@ -1,0 +1,3 @@
+This is a throwaway scratch file created during Kaustubh's handover practice run (2026-08-17).
+It exists only to test the branch -> commit -> push -> PR -> close workflow end to end.
+Safe to ignore. This file and its branch are deleted at the end of the practice run.
